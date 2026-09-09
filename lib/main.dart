@@ -29,6 +29,17 @@ class SickSevenApp extends StatelessWidget {
       title: 'Sick Seven',
       debugShowCheckedModeBanner: false,
       theme: SS.theme(),
+      // En escritorio la ventana es mucho más ancha que un teléfono. Sin este
+      // límite las cartas se estirarían a lo ancho de todo el monitor.
+      builder: (context, child) => ColoredBox(
+        color: SS.table,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: child,
+          ),
+        ),
+      ),
       home: const TitleScreen(),
     );
   }
