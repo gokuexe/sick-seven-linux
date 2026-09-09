@@ -344,9 +344,11 @@ class _HandCardState extends State<HandCard> with SingleTickerProviderStateMixin
                 ),
               ),
               const SizedBox(height: 5),
+              SocialTag(v: v),
+              const SizedBox(height: 5),
               Text(
                 widget.card.desc,
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                     fontSize: 9.5, color: SS.mute, height: 1.35),

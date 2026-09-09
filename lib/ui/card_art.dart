@@ -25,7 +25,12 @@ class CardVisual {
   final Color color;
   final FxShape shape;
 
-  const CardVisual(this.icon, this.color, this.shape);
+  /// Lo que "se comenta" al jugarla, en tono de notificación de red social.
+  /// Le da personalidad a la carta en la mano y en la mesa sin depender de
+  /// un ícono nuevo por cada una.
+  final String social;
+
+  const CardVisual(this.icon, this.color, this.shape, this.social);
 }
 
 const _verde = Color(0xFF5FD39B);
@@ -34,34 +39,86 @@ const _violeta = SS.react;
 
 /// Qué dibuja cada carta cuando cae sobre la pila.
 final Map<String, CardVisual> kVisuals = {
-  'mas1': const CardVisual(Icons.keyboard_arrow_up_rounded, _verde, FxShape.rise),
-  'mas2': const CardVisual(Icons.keyboard_double_arrow_up_rounded, _verde, FxShape.rise),
-  'mas3': const CardVisual(Icons.expand_less_rounded, _verde, FxShape.rise),
-  'men1': const CardVisual(Icons.keyboard_arrow_down_rounded, SS.rojo, FxShape.fall),
-  'men2': const CardVisual(Icons.keyboard_double_arrow_down_rounded, SS.rojo, FxShape.fall),
-  'men3': const CardVisual(Icons.expand_more_rounded, SS.rojo, FxShape.fall),
+  'mas1': const CardVisual(
+      Icons.keyboard_arrow_up_rounded, _verde, FxShape.rise, 'en alza 📈'),
+  'mas2': const CardVisual(Icons.keyboard_double_arrow_up_rounded, _verde,
+      FxShape.rise, 'tendencia 📈'),
+  'mas3': const CardVisual(
+      Icons.expand_less_rounded, _verde, FxShape.rise, 'se viralizó 🚀'),
+  'men1': const CardVisual(
+      Icons.keyboard_arrow_down_rounded, SS.rojo, FxShape.fall, 'en baja 📉'),
+  'men2': const CardVisual(Icons.keyboard_double_arrow_down_rounded, SS.rojo,
+      FxShape.fall, 'se hunde 📉'),
+  'men3': const CardVisual(
+      Icons.expand_more_rounded, SS.rojo, FxShape.fall, 'cae en picada 💥'),
 
-  'transferencia': const CardVisual(Icons.east_rounded, SS.azul, FxShape.drops),
-  'sanguijuela': const CardVisual(Icons.water_drop_rounded, SS.rojo, FxShape.drops),
-  'intercambio': const CardVisual(Icons.swap_horiz_rounded, SS.azul, FxShape.swirl),
-  'volteo': const CardVisual(Icons.flip_camera_android_rounded, SS.azul, FxShape.swirl),
-  'espejo': const CardVisual(Icons.auto_awesome_rounded, _hielo, FxShape.sweep),
-  'rebote': const CardVisual(Icons.u_turn_left_rounded, SS.azul, FxShape.ring),
+  'transferencia': const CardVisual(
+      Icons.east_rounded, SS.azul, FxShape.drops, 'te transferí 💸'),
+  'sanguijuela': const CardVisual(
+      Icons.water_drop_rounded, SS.rojo, FxShape.drops, 'te robó un like 🩸'),
+  'intercambio': const CardVisual(Icons.swap_horiz_rounded, SS.azul,
+      FxShape.swirl, 'cambio de cuenta 🔄'),
+  'volteo': const CardVisual(Icons.flip_camera_android_rounded, SS.azul,
+      FxShape.swirl, 'volteó el feed 🔀'),
+  'espejo': const CardVisual(
+      Icons.auto_awesome_rounded, _hielo, FxShape.sweep, 'copió tu story 📋'),
+  'rebote': const CardVisual(
+      Icons.u_turn_left_rounded, SS.azul, FxShape.ring, 'rebotó el mensaje ↩️'),
 
-  'sobrecarga': const CardVisual(Icons.bolt_rounded, SS.mana, FxShape.bolt),
-  'dobleJugada': const CardVisual(Icons.casino_rounded, SS.mana, FxShape.burst),
-  'respiro': const CardVisual(Icons.spa_rounded, _verde, FxShape.rise),
-  'sincronia': const CardVisual(Icons.sync_rounded, SS.mana, FxShape.ring),
+  'sobrecarga': const CardVisual(
+      Icons.bolt_rounded, SS.mana, FxShape.bolt, 'notis a full ⚡'),
+  'dobleJugada': const CardVisual(
+      Icons.casino_rounded, SS.mana, FxShape.burst, 'doble o nada 🎲'),
+  'respiro': const CardVisual(
+      Icons.spa_rounded, _verde, FxShape.rise, 'se desconectó 🌙'),
+  'sincronia': const CardVisual(
+      Icons.sync_rounded, SS.mana, FxShape.ring, 'sincronizado ✅'),
 
-  'ojear': const CardVisual(Icons.visibility_rounded, _verde, FxShape.sparkle),
+  'ojear': const CardVisual(
+      Icons.visibility_rounded, _verde, FxShape.sparkle, 'vio tu story 👀'),
 
-  'negar': const CardVisual(Icons.block_rounded, _violeta, FxShape.slash),
-  'congelar': const CardVisual(Icons.ac_unit_rounded, _hielo, FxShape.snow),
-  'desmentir': const CardVisual(Icons.gavel_rounded, _violeta, FxShape.burst),
+  'negar': const CardVisual(
+      Icons.block_rounded, _violeta, FxShape.slash, 'te bloqueó 🚫'),
+  'congelar': const CardVisual(
+      Icons.ac_unit_rounded, _hielo, FxShape.snow, 'congelado ❄️'),
+  'desmentir': const CardVisual(
+      Icons.gavel_rounded, _violeta, FxShape.burst, 'nota de comunidad 🔨'),
 };
 
 CardVisual visualFor(String cardId) =>
-    kVisuals[cardId] ?? const CardVisual(Icons.style_rounded, SS.mute, FxShape.burst);
+    kVisuals[cardId] ??
+    const CardVisual(Icons.style_rounded, SS.mute, FxShape.burst, 'nueva carta ✨');
+
+/// Etiqueta chica tipo notificación, con el color de la carta. Es lo que le
+/// da personalidad de red social tanto en la mano como en la mesa.
+class SocialTag extends StatelessWidget {
+  final CardVisual v;
+  final double fontSize;
+
+  const SocialTag({super.key, required this.v, this.fontSize = 8.5});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: v.color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: v.color.withValues(alpha: 0.55), width: 1),
+      ),
+      child: Text(
+        v.social,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+          color: Colors.white.withValues(alpha: 0.92),
+        ),
+      ),
+    );
+  }
+}
 
 /// Dibuja el efecto de una carta. Recibe el avance de 0 a 1 y calcula dónde va
 /// cada partícula en ese instante; no guarda estado, así se puede repintar

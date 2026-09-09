@@ -276,7 +276,7 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _hand(Player me, bool myTurn) {
     return SizedBox(
-      height: 108,
+      height: 120,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

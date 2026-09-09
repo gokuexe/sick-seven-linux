@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../model.dart';
 import '../theme.dart';
 import 'card_art.dart';
 
@@ -50,7 +49,6 @@ class MiniCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final v = visualFor(cardId);
-    final card = kCards[cardId];
 
     return Container(
       width: 64,
@@ -93,12 +91,12 @@ class MiniCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
-                  card?.name ?? '',
+                  v.social,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 8.5,
+                    fontSize: 8,
                     height: 1.15,
                     fontWeight: FontWeight.w700,
                     color: Colors.white.withValues(alpha: 0.85),
@@ -251,8 +249,8 @@ class _PlayedPileState extends State<PlayedPile>
                           ? c / 0.15
                           : (c > 0.8 ? ((1 - c) / 0.2).clamp(0.0, 1.0) : 1.0),
                       child: Text(
-                        '${visible.last.actor} juega '
-                        '${kCards[visible.last.cardId]?.name ?? ''}',
+                        '${visible.last.actor} · '
+                        '${visualFor(visible.last.cardId).social}',
                         style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
