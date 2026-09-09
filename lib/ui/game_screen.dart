@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../engine.dart';
@@ -22,6 +23,7 @@ class _GameScreenState extends State<GameScreen>
 
   final List<PlayedEntry> _pile = [];
   int _seq = 0;
+  final ScrollController _handScroll = ScrollController();
 
   late final AnimationController _singFlash = AnimationController(
     vsync: this,
@@ -104,6 +106,7 @@ class _GameScreenState extends State<GameScreen>
     engine.onFx = null;
     engine.dispose();
     _singFlash.dispose();
+    _handScroll.dispose();
     super.dispose();
   }
 
@@ -274,30 +277,61 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  /// En Windows/desktop una lista horizontal no responde ni a la rueda del
+  /// mouse ni al arrastre por defecto: sin esto, las cartas que no entran en
+  /// pantalla quedan inalcanzables. Este listener traduce la rueda vertical
+  /// en desplazamiento horizontal.
+  void _onHandWheel(PointerSignalEvent event) {
+    if (event is PointerScrollEvent && _handScroll.hasClients) {
+      final delta = event.scrollDelta.dy.abs() > event.scrollDelta.dx.abs()
+          ? event.scrollDelta.dy
+          : event.scrollDelta.dx;
+      _handScroll.jumpTo(
+        (_handScroll.offset + delta)
+            .clamp(0.0, _handScroll.position.maxScrollExtent),
+      );
+    }
+  }
+
   Widget _hand(Player me, bool myTurn) {
     return SizedBox(
-      height: 132,
+      height: 238,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           DeckStack(count: engine.deck.length),
           const SizedBox(width: 10),
           Expanded(
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: me.hand.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 7),
-              itemBuilder: (context, i) {
-                final card = kCards[me.hand[i]]!;
-                final cost = me.free > 0 ? 0 : card.cost;
-                final enabled =
-                    myTurn && !me.frozen && !card.isReaction && cost <= me.mana;
-                return HandCard(
-                  card: card,
-                  enabled: enabled,
-                  onTap: () => engine.humanPlay(i),
-                );
-              },
+            child: Listener(
+              onPointerSignal: _onHandWheel,
+              child: ScrollConfiguration(
+                behavior: _DragAnywhereScrollBehavior(),
+                child: Scrollbar(
+                  controller: _handScroll,
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  child: ListView.separated(
+                    controller: _handScroll,
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(bottom: 14),
+                    itemCount: me.hand.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final card = kCards[me.hand[i]]!;
+                      final cost = me.free > 0 ? 0 : card.cost;
+                      final enabled = myTurn &&
+                          !me.frozen &&
+                          !card.isReaction &&
+                          cost <= me.mana;
+                      return HandCard(
+                        card: card,
+                        enabled: enabled,
+                        onTap: () => engine.humanPlay(i),
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -380,4 +414,17 @@ class _Btn extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Por default Flutter solo deja arrastrar listas con el dedo; en el
+/// ejecutable de Windows no hay dedo, así que sin esto la mano quedaría
+/// atrapada detrás del borde de la ventana.
+class _DragAnywhereScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
 }

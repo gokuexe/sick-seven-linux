@@ -237,8 +237,8 @@ class HandCard extends StatefulWidget {
   State<HandCard> createState() => _HandCardState();
 }
 
-const double _handCardW = 98;
-const double _handCardH = 122;
+const double _handCardW = 138;
+const double _handCardH = 216;
 
 class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
   late final AnimationController _idle;
@@ -320,12 +320,60 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.28),
+          color: Colors.black.withValues(alpha: 0.4),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
         ),
         child: const Icon(Icons.cached_rounded, size: 13, color: Colors.white),
       ),
     );
   }
+
+  Widget _costBadge(CardVisual v) {
+    if (widget.card.isReaction) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        decoration: BoxDecoration(
+          color: SS.react,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(color: SS.react.withValues(alpha: 0.5), blurRadius: 6),
+          ],
+        ),
+        child: const Text(
+          'REAC',
+          style: TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.4,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+    return Container(
+      width: 24,
+      height: 24,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: SS.mana,
+        boxShadow: [
+          BoxShadow(color: SS.mana.withValues(alpha: 0.5), blurRadius: 6),
+        ],
+      ),
+      child: Text(
+        '${widget.card.cost}',
+        style: SS.numStyle.copyWith(fontSize: 13, color: const Color(0xFF2B1E00)),
+      ),
+    );
+  }
+
+  /// Una esquinita en diagonal, como el filo tallado de una carta de
+  /// colección: le da esa sensación de "ficha cargada" al panel de arte.
+  Widget _corner(Color c) => Transform.rotate(
+        angle: math.pi / 4,
+        child: Container(width: 5, height: 5, color: c.withValues(alpha: 0.7)),
+      );
 
   Widget _front(CardVisual v) {
     return AnimatedOpacity(
@@ -337,7 +385,7 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
           width: _handCardW,
           height: _handCardH,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -347,102 +395,154 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
               ],
             ),
             border: Border.all(
-              color: v.color.withValues(alpha: widget.enabled ? 0.55 : 0.22),
-              width: 1.4,
+              color: v.color.withValues(alpha: widget.enabled ? 0.6 : 0.22),
+              width: 1.6,
             ),
             boxShadow: widget.enabled
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                     BoxShadow(
-                      color: v.color.withValues(alpha: 0.25),
-                      blurRadius: 12,
+                      color: v.color.withValues(alpha: 0.28),
+                      blurRadius: 14,
                       spreadRadius: -3,
                     ),
                   ]
                 : null,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Stack(
             children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
-                decoration: BoxDecoration(
-                  color: v.color.withValues(alpha: 0.24),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // cabecera: solo ícono + nombre, sin competir por ancho
+                  // con las insignias (van superpuestas más abajo)
+                  Container(
+                    height: 27,
+                    padding: const EdgeInsets.fromLTRB(9, 0, 30, 0),
+                    alignment: Alignment.centerLeft,
+                    decoration: BoxDecoration(
+                      color: v.color.withValues(alpha: 0.22),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(14),
+                        topRight: Radius.circular(14),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(v.icon, size: 14, color: v.color),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            widget.card.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w800,
+                              color: SS.ink,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        v.social,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white.withValues(alpha: 0.92),
+                  // panel de arte: el mismo efecto de partículas que se ve
+                  // al jugarla, de fondo, para que la ficha se sienta viva
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(7, 7, 7, 6),
+                    height: 60,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: RadialGradient(
+                        colors: [
+                          Color.lerp(SS.surfaceUp, v.color, 0.4)!,
+                          Color.lerp(SS.surface, v.color, 0.08)!,
+                        ],
+                      ),
+                      border:
+                          Border.all(color: v.color.withValues(alpha: 0.5)),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: CardFxPainter(
+                              t: 0.5,
+                              v: v,
+                              seed: widget.card.id.hashCode,
+                            ),
+                          ),
+                        ),
+                        Icon(v.icon, size: 28, color: v.color),
+                        Positioned(top: 3, left: 3, child: _corner(v.color)),
+                        Positioned(top: 3, right: 3, child: _corner(v.color)),
+                        Positioned(
+                            bottom: 3, left: 3, child: _corner(v.color)),
+                        Positioned(
+                            bottom: 3, right: 3, child: _corner(v.color)),
+                      ],
+                    ),
+                  ),
+                  // la frase social, cortita, con mucho más aire que antes
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(7, 0, 7, 6),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: v.color.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                              color: v.color.withValues(alpha: 0.55)),
+                        ),
+                        child: Text(
+                          v.social,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white.withValues(alpha: 0.92),
+                          ),
                         ),
                       ),
                     ),
-                    _flipButton(),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(9, 7, 9, 9),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(v.icon, size: 16, color: v.color),
-                          const SizedBox(width: 5),
-                          Expanded(
-                            child: Text(
-                              widget.card.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: SS.ink,
-                              ),
-                            ),
-                          ),
-                        ],
+                  ),
+                  // la descripción, sobre un panel oscuro propio: sin esto
+                  // el texto se leía apagado sobre el degradé de la carta
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(7, 0, 7, 7),
+                      padding: const EdgeInsets.all(8),
+                      alignment: Alignment.topLeft,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.26),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        widget.card.isReaction
-                            ? 'reacción'
-                            : '${widget.card.cost} maná',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: widget.card.isReaction ? SS.react : SS.mana,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
+                      child: Text(
                         widget.card.desc,
-                        maxLines: 3,
+                        maxLines: 4,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            fontSize: 9.5, color: SS.mute, height: 1.35),
+                          fontSize: 10,
+                          color: SS.ink,
+                          height: 1.35,
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
+              Positioned(top: 19, right: 7, child: _costBadge(v)),
+              Positioned(top: 4, right: 4, child: _flipButton()),
             ],
           ),
         ),
@@ -460,7 +560,7 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
         height: _handCardH,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -469,12 +569,12 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
               Color.lerp(SS.surface, v.color, 0.10)!,
             ],
           ),
-          border: Border.all(color: v.color.withValues(alpha: 0.6), width: 1.4),
+          border: Border.all(color: v.color.withValues(alpha: 0.6), width: 1.6),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -482,18 +582,30 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(v.icon, size: 42, color: v.color),
-            const SizedBox(height: 9),
+            Icon(v.icon, size: 58, color: v.color),
+            const SizedBox(height: 14),
             Text(
               widget.card.name.toUpperCase(),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 10.5,
+                fontSize: 13,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.6,
                 color: SS.ink,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              v.social,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: v.color,
               ),
             ),
           ],
