@@ -137,9 +137,13 @@ class _GameScreenState extends State<GameScreen>
                     _rivals(),
                     const SizedBox(height: 10),
                     Expanded(
-                      child: PlayedPile(
-                        entries: _pile,
-                        footer: LogStrip(entries: engine.logs),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(flex: 3, child: PlayedPile(entries: _pile)),
+                          const SizedBox(width: 8),
+                          Expanded(flex: 2, child: LogView(entries: engine.logs)),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -273,21 +277,30 @@ class _GameScreenState extends State<GameScreen>
   Widget _hand(Player me, bool myTurn) {
     return SizedBox(
       height: 108,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: me.hand.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 7),
-        itemBuilder: (context, i) {
-          final card = kCards[me.hand[i]]!;
-          final cost = me.free > 0 ? 0 : card.cost;
-          final enabled =
-              myTurn && !me.frozen && !card.isReaction && cost <= me.mana;
-          return HandCard(
-            card: card,
-            enabled: enabled,
-            onTap: () => engine.humanPlay(i),
-          );
-        },
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          DeckStack(count: engine.deck.length),
+          const SizedBox(width: 10),
+          Expanded(
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: me.hand.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 7),
+              itemBuilder: (context, i) {
+                final card = kCards[me.hand[i]]!;
+                final cost = me.free > 0 ? 0 : card.cost;
+                final enabled =
+                    myTurn && !me.frozen && !card.isReaction && cost <= me.mana;
+                return HandCard(
+                  card: card,
+                  enabled: enabled,
+                  onTap: () => engine.humanPlay(i),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

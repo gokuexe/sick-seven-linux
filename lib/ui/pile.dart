@@ -143,9 +143,8 @@ class _BlockedPainter extends CustomPainter {
 /// La mesa. Las cartas caen desde arriba, golpean la pila y sueltan su efecto.
 class PlayedPile extends StatefulWidget {
   final List<PlayedEntry> entries;
-  final Widget? footer;
 
-  const PlayedPile({super.key, required this.entries, this.footer});
+  const PlayedPile({super.key, required this.entries});
 
   @override
   State<PlayedPile> createState() => _PlayedPileState();
@@ -263,13 +262,6 @@ class _PlayedPileState extends State<PlayedPile>
                     ),
                   ),
 
-                if (widget.footer != null)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: widget.footer!,
-                  ),
               ],
             );
           },
@@ -313,6 +305,91 @@ class _PlayedPileState extends State<PlayedPile>
             opacity: (c * 6).clamp(0.0, 1.0),
             child: MiniCard(cardId: e.cardId, blocked: e.blocked),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// El mazo de robo: de acá salen las cartas que llegan a la mano. El alto de
+/// la pila crece con lo que queda, así se ve venir cuando se está por acabar.
+class DeckStack extends StatelessWidget {
+  final int count;
+
+  const DeckStack({super.key, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final layers = count <= 0 ? 0 : (1 + (count / 20).floor()).clamp(1, 4);
+    return SizedBox(
+      width: 72,
+      height: 92,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          for (var i = 0; i < layers; i++)
+            Positioned(
+              left: 6.0 + i * 1.6,
+              top: 6.0 - i * 1.8,
+              child: const _CardBack(),
+            ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              child: Text(
+                '$count',
+                style: SS.numStyle.copyWith(fontSize: 11, color: SS.mute),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CardBack extends StatelessWidget {
+  const _CardBack();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 62,
+      height: 84,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(9),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [SS.tableUp, SS.table],
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.09), width: 1.3),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 7,
+              offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('6',
+                style: SS.numStyle.copyWith(
+                    fontSize: 22, color: Colors.white.withValues(alpha: 0.14))),
+            const SizedBox(width: 4),
+            Text('7',
+                style: SS.numStyle.copyWith(
+                    fontSize: 22, color: Colors.white.withValues(alpha: 0.14))),
+          ],
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../engine.dart';
 import '../model.dart';
 import '../theme.dart';
+import 'card_art.dart';
 
 /// Panel de un rival. Sus dos cartas están tapadas hasta que las mires con
 /// Ojear; el maná en cambio siempre es público, y es la mejor pista de si
@@ -214,8 +215,11 @@ class _LogViewState extends State<LogView> {
   }
 }
 
-/// Una carta de acción en la mano.
-class HandCard extends StatelessWidget {
+/// Una carta de acción en la mano. Usa el mismo ícono y color que su versión
+/// en la pila, para que se reconozca de un vistazo qué va a caer si se juega.
+/// Se mece sola con un movimiento leve y desincronizado entre cartas, así la
+/// mano se siente viva sin llamar la atención.
+class HandCard extends StatefulWidget {
   final ActionCard card;
   final bool enabled;
   final VoidCallback onTap;
@@ -227,47 +231,84 @@ class HandCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color get _accent {
-    switch (card.family) {
-      case CardFamily.motor:
-        return SS.line;
-      case CardFamily.interaccion:
-        return SS.azul;
-      case CardFamily.riesgo:
-        return SS.mana;
-      case CardFamily.reaccion:
-        return SS.react;
-      case CardFamily.info:
-        return SS.win;
-    }
+  @override
+  State<HandCard> createState() => _HandCardState();
+}
+
+class _HandCardState extends State<HandCard> with SingleTickerProviderStateMixin {
+  late final AnimationController _idle;
+
+  @override
+  void initState() {
+    super.initState();
+    final seed = widget.card.id.hashCode;
+    _idle = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 2200 + seed % 700),
+    )
+      ..value = (seed % 1000) / 1000
+      ..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _idle.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final v = visualFor(widget.card.id);
+    return AnimatedBuilder(
+      animation: _idle,
+      builder: (context, _) {
+        final t = Curves.easeInOut.transform(_idle.value);
+        return Transform.translate(
+          offset: Offset(0, -2 + t * 2.2),
+          child: Transform.rotate(
+            angle: (t - 0.5) * 0.022,
+            child: _card(v),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _card(CardVisual v) {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
-      opacity: enabled ? 1 : 0.4,
+      opacity: widget.enabled ? 1 : 0.4,
       child: GestureDetector(
-        onTap: enabled ? onTap : null,
+        onTap: widget.enabled ? widget.onTap : null,
         child: Container(
-          width: 96,
-          padding: const EdgeInsets.fromLTRB(9, 8, 9, 9),
+          width: 98,
+          padding: const EdgeInsets.fromLTRB(9, 9, 9, 9),
           decoration: BoxDecoration(
-            color: SS.surface,
-            borderRadius: BorderRadius.circular(11),
-            border: Border(
-              top: BorderSide(color: SS.line),
-              right: BorderSide(color: SS.line),
-              bottom: BorderSide(color: SS.line),
-              left: BorderSide(color: _accent, width: 3.5),
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(SS.surfaceUp, v.color, 0.16)!,
+                Color.lerp(SS.surface, v.color, 0.04)!,
+              ],
             ),
-            boxShadow: enabled
+            border: Border.all(
+              color: v.color.withValues(alpha: widget.enabled ? 0.55 : 0.22),
+              width: 1.4,
+            ),
+            boxShadow: widget.enabled
                 ? [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.35),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
-                    )
+                    ),
+                    BoxShadow(
+                      color: v.color.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      spreadRadius: -3,
+                    ),
                   ]
                 : null,
           ),
@@ -275,26 +316,36 @@ class HandCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                card.name,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: SS.ink,
-                ),
+              Row(
+                children: [
+                  Icon(v.icon, size: 16, color: v.color),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      widget.card.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: SS.ink,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 3),
               Text(
-                card.isReaction ? 'reacción' : '${card.cost} maná',
+                widget.card.isReaction ? 'reacción' : '${widget.card.cost} maná',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: card.isReaction ? SS.react : SS.mana,
+                  color: widget.card.isReaction ? SS.react : SS.mana,
                 ),
               ),
               const SizedBox(height: 5),
               Text(
-                card.desc,
+                widget.card.desc,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -302,57 +353,6 @@ class HandCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-
-/// Versión reducida del registro, para apoyar sobre la mesa sin taparla.
-class LogStrip extends StatelessWidget {
-  final List<LogEntry> entries;
-  const LogStrip({super.key, required this.entries});
-
-  @override
-  Widget build(BuildContext context) {
-    final last = entries.length > 3
-        ? entries.sublist(entries.length - 3)
-        : entries;
-    return IgnorePointer(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 22, 12, 8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.black.withValues(alpha: 0.45),
-              Colors.black.withValues(alpha: 0.62),
-            ],
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < last.length; i++)
-              Text(
-                last[i].text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  height: 1.5,
-                  color: i == last.length - 1
-                      ? SS.ink
-                      : SS.mute.withValues(alpha: 0.75 - (last.length - 1 - i) * 0.2),
-                  fontWeight:
-                      i == last.length - 1 ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-          ],
         ),
       ),
     );
