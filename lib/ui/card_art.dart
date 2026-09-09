@@ -89,37 +89,6 @@ CardVisual visualFor(String cardId) =>
     kVisuals[cardId] ??
     const CardVisual(Icons.style_rounded, SS.mute, FxShape.burst, 'nueva carta ✨');
 
-/// Etiqueta chica tipo notificación, con el color de la carta. Es lo que le
-/// da personalidad de red social tanto en la mano como en la mesa.
-class SocialTag extends StatelessWidget {
-  final CardVisual v;
-  final double fontSize;
-
-  const SocialTag({super.key, required this.v, this.fontSize = 8.5});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-      decoration: BoxDecoration(
-        color: v.color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: v.color.withValues(alpha: 0.55), width: 1),
-      ),
-      child: Text(
-        v.social,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w700,
-          color: Colors.white.withValues(alpha: 0.92),
-        ),
-      ),
-    );
-  }
-}
-
 /// Dibuja el efecto de una carta. Recibe el avance de 0 a 1 y calcula dónde va
 /// cada partícula en ese instante; no guarda estado, así se puede repintar
 /// cuantas veces haga falta sin que se desincronice.

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../engine.dart';
@@ -235,8 +237,13 @@ class HandCard extends StatefulWidget {
   State<HandCard> createState() => _HandCardState();
 }
 
-class _HandCardState extends State<HandCard> with SingleTickerProviderStateMixin {
+const double _handCardW = 98;
+const double _handCardH = 122;
+
+class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
   late final AnimationController _idle;
+  late final AnimationController _flip;
+  bool _showBack = false;
 
   @override
   void initState() {
@@ -248,12 +255,22 @@ class _HandCardState extends State<HandCard> with SingleTickerProviderStateMixin
     )
       ..value = (seed % 1000) / 1000
       ..repeat(reverse: true);
+    _flip = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
   }
 
   @override
   void dispose() {
     _idle.dispose();
+    _flip.dispose();
     super.dispose();
+  }
+
+  void _toggleFlip() {
+    setState(() => _showBack = !_showBack);
+    _showBack ? _flip.forward() : _flip.reverse();
   }
 
   @override
@@ -267,22 +284,58 @@ class _HandCardState extends State<HandCard> with SingleTickerProviderStateMixin
           offset: Offset(0, -2 + t * 2.2),
           child: Transform.rotate(
             angle: (t - 0.5) * 0.022,
-            child: _card(v),
+            child: AnimatedBuilder(
+              animation: _flip,
+              builder: (context, __) {
+                final angle = Curves.easeInOut.transform(_flip.value) * math.pi;
+                final backHalf = angle > math.pi / 2;
+                return Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.0016)
+                    ..rotateY(angle),
+                  child: backHalf
+                      ? Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()..rotateY(math.pi),
+                          child: _back(v),
+                        )
+                      : _front(v),
+                );
+              },
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _card(CardVisual v) {
+  Widget _flipButton() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _toggleFlip,
+      child: Container(
+        width: 20,
+        height: 20,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withValues(alpha: 0.28),
+        ),
+        child: const Icon(Icons.cached_rounded, size: 13, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _front(CardVisual v) {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
       opacity: widget.enabled ? 1 : 0.4,
       child: GestureDetector(
         onTap: widget.enabled ? widget.onTap : null,
         child: Container(
-          width: 98,
-          padding: const EdgeInsets.fromLTRB(9, 9, 9, 9),
+          width: _handCardW,
+          height: _handCardH,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             gradient: LinearGradient(
@@ -313,48 +366,137 @@ class _HandCardState extends State<HandCard> with SingleTickerProviderStateMixin
                 : null,
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Icon(v.icon, size: 16, color: v.color),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: Text(
-                      widget.card.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: SS.ink,
+              Container(
+                padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+                decoration: BoxDecoration(
+                  color: v.color.withValues(alpha: 0.24),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        v.social,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white.withValues(alpha: 0.92),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                widget.card.isReaction ? 'reacción' : '${widget.card.cost} maná',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: widget.card.isReaction ? SS.react : SS.mana,
+                    _flipButton(),
+                  ],
                 ),
               ),
-              const SizedBox(height: 5),
-              SocialTag(v: v),
-              const SizedBox(height: 5),
-              Text(
-                widget.card.desc,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontSize: 9.5, color: SS.mute, height: 1.35),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(9, 7, 9, 9),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(v.icon, size: 16, color: v.color),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              widget.card.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: SS.ink,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        widget.card.isReaction
+                            ? 'reacción'
+                            : '${widget.card.cost} maná',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: widget.card.isReaction ? SS.react : SS.mana,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        widget.card.desc,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 9.5, color: SS.mute, height: 1.35),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// El dorso: el ícono grande de la carta, como un sello. Tocarlo la vuelve
+  /// a poner del lado jugable.
+  Widget _back(CardVisual v) {
+    return GestureDetector(
+      onTap: _toggleFlip,
+      child: Container(
+        width: _handCardW,
+        height: _handCardH,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.lerp(SS.surfaceUp, v.color, 0.32)!,
+              Color.lerp(SS.surface, v.color, 0.10)!,
+            ],
+          ),
+          border: Border.all(color: v.color.withValues(alpha: 0.6), width: 1.4),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(v.icon, size: 42, color: v.color),
+            const SizedBox(height: 9),
+            Text(
+              widget.card.name.toUpperCase(),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+                color: SS.ink,
+              ),
+            ),
+          ],
         ),
       ),
     );
