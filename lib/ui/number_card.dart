@@ -104,7 +104,7 @@ class _NumberCardState extends State<NumberCard>
                 clipBehavior: Clip.none,
                 children: [
                   Container(
-                    height: 118,
+                    height: 104,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       gradient: LinearGradient(
@@ -165,7 +165,7 @@ class _NumberCardState extends State<NumberCard>
                               child: Text(
                                 '${widget.value}',
                                 key: ValueKey<int>(widget.value),
-                                style: SS.numStyle.copyWith(fontSize: 52),
+                                style: SS.numStyle.copyWith(fontSize: 46),
                               ),
                             ),
                             const SizedBox(height: 2),

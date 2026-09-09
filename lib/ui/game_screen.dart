@@ -7,6 +7,7 @@ import '../theme.dart';
 import 'number_card.dart';
 import 'overlays.dart';
 import 'pieces.dart';
+import 'pile.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -16,26 +17,23 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final GameEngine engine = GameEngine();
 
-  late final AnimationController _fly = AnimationController(
+  final List<PlayedEntry> _pile = [];
+  int _seq = 0;
+
+  late final AnimationController _singFlash = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 950),
+    duration: const Duration(milliseconds: 1400),
   );
-  ActionCard? _flyCard;
-  String _flyActor = '';
+  String _singActor = '';
 
   @override
   void initState() {
     super.initState();
     engine.onFx = _handleFx;
     engine.addListener(_onEngine);
-    _fly.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) {
-        setState(() => _flyCard = null);
-      }
-    });
     Sfx.i.init();
   }
 
@@ -46,13 +44,12 @@ class _GameScreenState extends State<GameScreen>
   void _handleFx(Fx fx) {
     switch (fx.kind) {
       case FxKind.play:
-        final card = kCards[fx.cardId];
-        if (card != null) {
+        final id = fx.cardId;
+        if (id != null) {
           setState(() {
-            _flyCard = card;
-            _flyActor = fx.actorName ?? '';
+            _pile.add(PlayedEntry.scattered(_seq++, id, fx.actorName ?? ''));
+            if (_pile.length > 12) _pile.removeAt(0);
           });
-          _fly.forward(from: 0);
         }
         Sfx.i.play('play');
         Sfx.i.tap();
@@ -68,10 +65,16 @@ class _GameScreenState extends State<GameScreen>
         if (fx.playerId == 0) Sfx.i.heavy();
         break;
       case FxKind.block:
+        // la carta cancelada queda en la pila, tachada
+        if (_pile.isNotEmpty) {
+          setState(() => _pile.last.blocked = true);
+        }
         Sfx.i.play('block');
         Sfx.i.thump();
         break;
       case FxKind.sing:
+        setState(() => _singActor = fx.actorName ?? '');
+        _singFlash.forward(from: 0);
         Sfx.i.play('sing');
         Sfx.i.thump();
         break;
@@ -100,8 +103,17 @@ class _GameScreenState extends State<GameScreen>
     engine.removeListener(_onEngine);
     engine.onFx = null;
     engine.dispose();
-    _fly.dispose();
+    _singFlash.dispose();
     super.dispose();
+  }
+
+  void _restart() {
+    Sfx.i.tap();
+    setState(() {
+      _pile.clear();
+      _seq = 0;
+    });
+    engine.newGame();
   }
 
   @override
@@ -124,20 +136,24 @@ class _GameScreenState extends State<GameScreen>
                     const SizedBox(height: 10),
                     _rivals(),
                     const SizedBox(height: 10),
-                    Expanded(child: LogView(entries: engine.logs)),
+                    Expanded(
+                      child: PlayedPile(
+                        entries: _pile,
+                        footer: LogStrip(entries: engine.logs),
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     _myCards(me),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     _status(me),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     _hand(me, myTurn),
                     const SizedBox(height: 8),
                     _buttons(me, myTurn),
                   ],
                 ),
               ),
-              if (_flyCard != null)
-                FlyingCard(actor: _flyActor, card: _flyCard!, anim: _fly),
+              SingFlash(anim: _singFlash, actor: _singActor),
               if (engine.choice != null)
                 ChoiceOverlay(
                   key: ValueKey(engine.choice),
@@ -148,10 +164,7 @@ class _GameScreenState extends State<GameScreen>
                 EndOverlay(
                   winner: engine.winner!,
                   youWon: engine.winner == 'Vos',
-                  onAgain: () {
-                    Sfx.i.tap();
-                    engine.newGame();
-                  },
+                  onAgain: _restart,
                 ),
             ],
           ),
@@ -259,7 +272,7 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _hand(Player me, bool myTurn) {
     return SizedBox(
-      height: 118,
+      height: 108,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: me.hand.length,
@@ -267,10 +280,8 @@ class _GameScreenState extends State<GameScreen>
         itemBuilder: (context, i) {
           final card = kCards[me.hand[i]]!;
           final cost = me.free > 0 ? 0 : card.cost;
-          final enabled = myTurn &&
-              !me.frozen &&
-              !card.isReaction &&
-              cost <= me.mana;
+          final enabled =
+              myTurn && !me.frozen && !card.isReaction && cost <= me.mana;
           return HandCard(
             card: card,
             enabled: enabled,

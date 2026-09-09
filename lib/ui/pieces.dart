@@ -295,13 +295,64 @@ class HandCard extends StatelessWidget {
               const SizedBox(height: 5),
               Text(
                 card.desc,
-                maxLines: 4,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                     fontSize: 9.5, color: SS.mute, height: 1.35),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// Versión reducida del registro, para apoyar sobre la mesa sin taparla.
+class LogStrip extends StatelessWidget {
+  final List<LogEntry> entries;
+  const LogStrip({super.key, required this.entries});
+
+  @override
+  Widget build(BuildContext context) {
+    final last = entries.length > 3
+        ? entries.sublist(entries.length - 3)
+        : entries;
+    return IgnorePointer(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 22, 12, 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.black.withValues(alpha: 0.45),
+              Colors.black.withValues(alpha: 0.62),
+            ],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < last.length; i++)
+              Text(
+                last[i].text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  height: 1.5,
+                  color: i == last.length - 1
+                      ? SS.ink
+                      : SS.mute.withValues(alpha: 0.75 - (last.length - 1 - i) * 0.2),
+                  fontWeight:
+                      i == last.length - 1 ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+          ],
         ),
       ),
     );

@@ -177,84 +177,6 @@ class _OptionButton extends StatelessWidget {
   }
 }
 
-/// La carta que acaba de jugarse, en grande y al centro. Dura poco: es para
-/// que sepas qué pasó sin tener que leer el registro.
-class FlyingCard extends StatelessWidget {
-  final String actor;
-  final ActionCard card;
-  final Animation<double> anim;
-
-  const FlyingCard({
-    super.key,
-    required this.actor,
-    required this.card,
-    required this.anim,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: AnimatedBuilder(
-          animation: anim,
-          builder: (context, _) {
-            final t = anim.value;
-            final scale = 0.72 + Curves.easeOutBack.transform(
-                  t.clamp(0.0, 0.55) / 0.55,
-                ) * 0.35;
-            final opacity = t < 0.7 ? 1.0 : (1 - (t - 0.7) / 0.3);
-            final dy = -18.0 - t * 26;
-            return Center(
-              child: Opacity(
-                opacity: opacity.clamp(0.0, 1.0),
-                child: Transform.translate(
-                  offset: Offset(0, dy),
-                  child: Transform.scale(
-                    scale: scale,
-                    child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: SS.surfaceUp,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: SS.mana, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            blurRadius: 30,
-                            offset: const Offset(0, 10),
-                          )
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(actor,
-                              style: const TextStyle(
-                                  fontSize: 11, color: SS.mute)),
-                          const SizedBox(height: 4),
-                          Text(
-                            card.name,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: SS.ink,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
 /// Pantalla final con papelitos. Solo aparece cuando ganás vos; si gana un bot
 /// la misma pantalla va sin confeti.
 class EndOverlay extends StatefulWidget {
@@ -384,4 +306,118 @@ class _ConfettiPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ConfettiPainter old) => old.t != t;
+}
+
+
+/// Destello de pantalla completa cuando alguien canta. Es el momento más
+/// importante de la partida, así que se toma un segundo entero.
+class SingFlash extends StatelessWidget {
+  final Animation<double> anim;
+  final String actor;
+
+  const SingFlash({super.key, required this.anim, required this.actor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: anim,
+          builder: (context, _) {
+            final t = anim.value;
+            if (t <= 0 || t >= 1) return const SizedBox.shrink();
+            final fade = t < 0.25 ? t / 0.25 : (1 - t) / 0.75;
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(painter: _RayPainter(t)),
+                ),
+                Opacity(
+                  opacity: fade.clamp(0.0, 1.0),
+                  child: Transform.scale(
+                    scale: 0.7 + Curves.easeOutBack.transform(
+                          (t / 0.35).clamp(0.0, 1.0),
+                        ) * 0.45,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          actor,
+                          style: const TextStyle(
+                              fontSize: 13, color: SS.mute),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '¡SICK SEVEN!',
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                            color: SS.mana,
+                            shadows: [
+                              Shadow(
+                                color: SS.mana.withValues(alpha: 0.8),
+                                blurRadius: 26,
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _RayPainter extends CustomPainter {
+  final double t;
+  _RayPainter(this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final fade = (1 - t) * 0.6;
+
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            SS.mana.withValues(alpha: 0.30 * fade),
+            Colors.transparent,
+          ],
+        ).createShader(Offset.zero & size),
+    );
+
+    final p = Paint()..color = SS.mana.withValues(alpha: 0.16 * fade);
+    for (var i = 0; i < 14; i++) {
+      final a = (i / 14) * math.pi * 2 + t * 0.7;
+      final long = size.height * 1.3;
+      final path = Path()
+        ..moveTo(center.dx, center.dy)
+        ..lineTo(center.dx + math.cos(a - 0.045) * long,
+            center.dy + math.sin(a - 0.045) * long)
+        ..lineTo(center.dx + math.cos(a + 0.045) * long,
+            center.dy + math.sin(a + 0.045) * long)
+        ..close();
+      canvas.drawPath(path, p);
+    }
+
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5 * (1 - t)
+      ..color = SS.mana.withValues(alpha: (1 - t) * 0.55);
+    canvas.drawCircle(
+        center, Curves.easeOutCubic.transform(t) * size.width * 0.75, ring);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RayPainter old) => old.t != t;
 }
