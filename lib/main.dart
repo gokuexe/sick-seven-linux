@@ -45,8 +45,15 @@ class SickSevenApp extends StatelessWidget {
 /// Escala el diseño (pensado para ~480×860) al alto disponible, sin
 /// reescribir ninguna pantalla: todo el árbol de widgets sigue creyendo
 /// que vive en esas medidas, solo se pinta más grande o más chico.
+///
+/// En una ventana bien panorámica, escalar solo por el alto deja el diseño
+/// angosto y bandas enormes a los costados: además de escalar, se le da un
+/// poco más de ancho de "lienzo" (hasta 620) para que las filas con
+/// Expanded/flex de GameScreen se estiren y aprovechen ese espacio, en vez
+/// de dejarlo vacío.
 class _ResponsiveStage extends StatelessWidget {
-  static const double _designW = 480;
+  static const double _designMinW = 480;
+  static const double _designMaxW = 620;
   static const double _designH = 860;
 
   final Widget child;
@@ -57,18 +64,22 @@ class _ResponsiveStage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         final heightScale = box.maxHeight / _designH;
-        final widthScale = box.maxWidth / _designW;
-        final scale = (heightScale < widthScale ? heightScale : widthScale)
-            .clamp(0.7, 1.8)
+        final widthScaleAtMin = box.maxWidth / _designMinW;
+        final scale =
+            (heightScale < widthScaleAtMin ? heightScale : widthScaleAtMin)
+                .clamp(0.7, 1.8)
+                .toDouble();
+        final designW = (box.maxWidth / scale)
+            .clamp(_designMinW, _designMaxW)
             .toDouble();
         return Center(
           child: SizedBox(
-            width: _designW * scale,
+            width: designW * scale,
             height: _designH * scale,
             child: Transform.scale(
               scale: scale,
               child: SizedBox(
-                width: _designW,
+                width: designW,
                 height: _designH,
                 child: child,
               ),

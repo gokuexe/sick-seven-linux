@@ -450,8 +450,9 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
                       ],
                     ),
                   ),
-                  // panel de arte: el mismo efecto de partículas que se ve
-                  // al jugarla, de fondo, para que la ficha se sienta viva
+                  // panel de arte: un ícono grande y tranquilo. El efecto de
+                  // partículas se guarda para cuando la carta cae en la
+                  // pila — congelado en la ficha se veía más ruido que dibujo
                   Container(
                     margin: const EdgeInsets.fromLTRB(7, 7, 7, 6),
                     height: 60,
@@ -470,16 +471,7 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: CardFxPainter(
-                              t: 0.5,
-                              v: v,
-                              seed: widget.card.id.hashCode,
-                            ),
-                          ),
-                        ),
-                        Icon(v.icon, size: 28, color: v.color),
+                        Icon(v.icon, size: 32, color: v.color),
                         Positioned(top: 3, left: 3, child: _corner(v.color)),
                         Positioned(top: 3, right: 3, child: _corner(v.color)),
                         Positioned(
@@ -489,7 +481,9 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
                       ],
                     ),
                   ),
-                  // la frase social, cortita, con mucho más aire que antes
+                  // la frase social: fondo oscuro y texto en el color de la
+                  // carta, no al revés — así se lee igual de bien sin
+                  // importar si esa carta es de un color claro o uno oscuro
                   Padding(
                     padding: const EdgeInsets.fromLTRB(7, 0, 7, 6),
                     child: Align(
@@ -498,19 +492,19 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: v.color.withValues(alpha: 0.2),
+                          color: Colors.black.withValues(alpha: 0.38),
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                              color: v.color.withValues(alpha: 0.55)),
+                              color: v.color.withValues(alpha: 0.65)),
                         ),
                         child: Text(
                           v.social,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 9,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white.withValues(alpha: 0.92),
+                            color: v.color,
                           ),
                         ),
                       ),
@@ -532,9 +526,9 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
                         maxLines: 4,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.5,
                           color: SS.ink,
-                          height: 1.35,
+                          height: 1.4,
                         ),
                       ),
                     ),
