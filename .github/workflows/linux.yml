@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # ubuntu-latest (24.04) enlaza símbolos de GLib 2.80+ que no existen en 22.04.
+    runs-on: ubuntu-22.04
     steps:
       - name: Traer el código
         uses: actions/checkout@v4

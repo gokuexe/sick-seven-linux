@@ -47,6 +47,11 @@ flutter build linux --release
 El ejecutable y sus librerías quedan en `build/linux/x64/release/bundle/`.
 Podés empaquetar esa carpeta entera para distribuir.
 
+**Compatibilidad:** el build de CI se compila en Ubuntu 22.04 para que funcione
+en 22.04 LTS en adelante. Si ves
+`undefined symbol: g_once_init_enter_pointer`, estás usando un build viejo
+hecho en Ubuntu 24.04 — bajá el release `linux` más reciente.
+
 ## Otras plataformas
 
 ```bash
