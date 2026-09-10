@@ -26,6 +26,13 @@ jobs:
       - name: Generar la carpeta de Windows
         run: flutter create . --platforms=windows --project-name sick_seven
 
+      - name: Abrir con proporción de celular, no de escritorio
+        run: |
+          (Get-Content windows\runner\main.cpp) `
+            -replace 'Size size\(\d+,\s*\d+\)', 'Size size(520, 900)' |
+            Set-Content windows\runner\main.cpp
+        shell: pwsh
+
       - name: Bajar dependencias
         run: flutter pub get
 

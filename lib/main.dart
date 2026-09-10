@@ -29,18 +29,53 @@ class SickSevenApp extends StatelessWidget {
       title: 'Sick Seven',
       debugShowCheckedModeBanner: false,
       theme: SS.theme(),
-      // En escritorio la ventana es mucho más ancha que un teléfono. Sin este
-      // límite las cartas se estirarían a lo ancho de todo el monitor.
+      // El juego está pensado para un celular. En una ventana de escritorio
+      // mucho más ancha (o más alta) que eso, en vez de dejarlo fijo y chico
+      // con bandas vacías a los costados, se escala para aprovechar el alto
+      // disponible, como haría un emulador.
       builder: (context, child) => ColoredBox(
         color: SS.table,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: child,
-          ),
-        ),
+        child: _ResponsiveStage(child: child!),
       ),
       home: const TitleScreen(),
+    );
+  }
+}
+
+/// Escala el diseño (pensado para ~480×860) al alto disponible, sin
+/// reescribir ninguna pantalla: todo el árbol de widgets sigue creyendo
+/// que vive en esas medidas, solo se pinta más grande o más chico.
+class _ResponsiveStage extends StatelessWidget {
+  static const double _designW = 480;
+  static const double _designH = 860;
+
+  final Widget child;
+  const _ResponsiveStage({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final heightScale = box.maxHeight / _designH;
+        final widthScale = box.maxWidth / _designW;
+        final scale = (heightScale < widthScale ? heightScale : widthScale)
+            .clamp(0.7, 1.8)
+            .toDouble();
+        return Center(
+          child: SizedBox(
+            width: _designW * scale,
+            height: _designH * scale,
+            child: Transform.scale(
+              scale: scale,
+              child: SizedBox(
+                width: _designW,
+                height: _designH,
+                child: child,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
