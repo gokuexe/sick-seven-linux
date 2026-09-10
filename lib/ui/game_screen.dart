@@ -131,7 +131,10 @@ class _GameScreenState extends State<GameScreen>
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                // el margen inferior queda generoso a propósito: en
+                // Windows maximizado no hay garantía de que el borde de la
+                // ventana sea clickeable hasta el último píxel
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 26),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -295,7 +298,7 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _hand(Player me, bool myTurn) {
     return SizedBox(
-      height: 238,
+      height: 326,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

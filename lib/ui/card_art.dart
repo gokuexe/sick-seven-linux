@@ -30,7 +30,19 @@ class CardVisual {
   /// un ícono nuevo por cada una.
   final String social;
 
-  const CardVisual(this.icon, this.color, this.shape, this.social);
+  /// El titular de la "nota de la comunidad" que corona la carta en la mano.
+  final String ribbon;
+
+  /// El posteo de ejemplo que ilustra el efecto, con libertad propia — no
+  /// repite el número exacto de la jugada. La parte entre asteriscos se
+  /// resalta con el color de la carta; el resto usa el estilo base.
+  final String post;
+
+  /// El sello que cierra la ficha, a juego con el ribbon.
+  final String stamp;
+
+  const CardVisual(this.icon, this.color, this.shape, this.social,
+      this.ribbon, this.post, this.stamp);
 }
 
 const _verde = Color(0xFF5FD39B);
@@ -39,55 +51,90 @@ const _violeta = SS.react;
 
 /// Qué dibuja cada carta cuando cae sobre la pila.
 final Map<String, CardVisual> kVisuals = {
-  'mas1': const CardVisual(
-      Icons.keyboard_arrow_up_rounded, _verde, FxShape.rise, 'en alza 📈'),
+  'mas1': const CardVisual(Icons.keyboard_arrow_up_rounded, _verde,
+      FxShape.rise, 'en alza 📈', 'TENDENCIA DEL TURNO',
+      '¡Subí *1 seguidor*! 📈', 'SUBIÓ'),
   'mas2': const CardVisual(Icons.keyboard_double_arrow_up_rounded, _verde,
-      FxShape.rise, 'tendencia 📈'),
-  'mas3': const CardVisual(
-      Icons.expand_less_rounded, _verde, FxShape.rise, 'se viralizó 🚀'),
-  'men1': const CardVisual(
-      Icons.keyboard_arrow_down_rounded, SS.rojo, FxShape.fall, 'en baja 📉'),
+      FxShape.rise, 'tendencia 📈', 'EN TENDENCIA',
+      '¡*Doble aumento* de views! 📈', 'TENDENCIA'),
+  'mas3': const CardVisual(Icons.expand_less_rounded, _verde, FxShape.rise,
+      'se viralizó 🚀', 'CONTENIDO VIRAL',
+      'Se me *llenó de comentarios* 🚀', 'VIRAL'),
+  'men1': const CardVisual(Icons.keyboard_arrow_down_rounded, SS.rojo,
+      FxShape.fall, 'en baja 📉', 'BAJÓ EL ENGAGEMENT',
+      'Perdí *1 seguidor* 📉', 'BAJÓ'),
   'men2': const CardVisual(Icons.keyboard_double_arrow_down_rounded, SS.rojo,
-      FxShape.fall, 'se hunde 📉'),
-  'men3': const CardVisual(
-      Icons.expand_more_rounded, SS.rojo, FxShape.fall, 'cae en picada 💥'),
+      FxShape.fall, 'se hunde 📉', 'CAYENDO EN PICADA',
+      'Se me *cayeron las visitas* 📉', 'CAYÓ'),
+  'men3': const CardVisual(Icons.expand_more_rounded, SS.rojo, FxShape.fall,
+      'cae en picada 💥', 'CRISIS DE IMAGEN',
+      '*Todos dejaron de seguirme* 💥', 'CRISIS'),
 
-  'transferencia': const CardVisual(
-      Icons.east_rounded, SS.azul, FxShape.drops, 'te transferí 💸'),
-  'sanguijuela': const CardVisual(
-      Icons.water_drop_rounded, SS.rojo, FxShape.drops, 'te robó un like 🩸'),
+  'transferencia': const CardVisual(Icons.east_rounded, SS.azul,
+      FxShape.drops, 'te transferí 💸', 'TRANSFERENCIA CONFIRMADA',
+      'Le mandé *unos puntitos* 💸', 'ENVIADO'),
+  'sanguijuela': const CardVisual(Icons.water_drop_rounded, SS.rojo,
+      FxShape.drops, 'te robó un like 🩸', 'ACTIVIDAD SOSPECHOSA',
+      'Me *clonaron el contenido* 🩸', 'DRENADO'),
   'intercambio': const CardVisual(Icons.swap_horiz_rounded, SS.azul,
-      FxShape.swirl, 'cambio de cuenta 🔄'),
+      FxShape.swirl, 'cambio de cuenta 🔄', 'CAMBIO DE CUENTA',
+      '*Cambiamos de usuario* un rato 🔄', 'CAMBIADO'),
   'volteo': const CardVisual(Icons.flip_camera_android_rounded, SS.azul,
-      FxShape.swirl, 'volteó el feed 🔀'),
-  'espejo': const CardVisual(
-      Icons.auto_awesome_rounded, _hielo, FxShape.sweep, 'copió tu story 📋'),
-  'rebote': const CardVisual(
-      Icons.u_turn_left_rounded, SS.azul, FxShape.ring, 'rebotó el mensaje ↩️'),
+      FxShape.swirl, 'volteó el feed 🔀', 'ALGORITMO ALTERADO',
+      'Se me *invirtió el feed* 🔀', 'VOLTEADO'),
+  'espejo': const CardVisual(Icons.auto_awesome_rounded, _hielo,
+      FxShape.sweep, 'copió tu story 📋', 'CONTENIDO DUPLICADO',
+      '*Copiaron mi historia* 📋', 'COPIADO'),
+  'rebote': const CardVisual(Icons.u_turn_left_rounded, SS.azul, FxShape.ring,
+      'rebotó el mensaje ↩️', 'MENSAJE REENVIADO',
+      'Me *devolvieron el mensaje* ↩️', 'REBOTADO'),
 
-  'sobrecarga': const CardVisual(
-      Icons.bolt_rounded, SS.mana, FxShape.bolt, 'notis a full ⚡'),
-  'dobleJugada': const CardVisual(
-      Icons.casino_rounded, SS.mana, FxShape.burst, 'doble o nada 🎲'),
-  'respiro': const CardVisual(
-      Icons.spa_rounded, _verde, FxShape.rise, 'se desconectó 🌙'),
-  'sincronia': const CardVisual(
-      Icons.sync_rounded, SS.mana, FxShape.ring, 'sincronizado ✅'),
+  'sobrecarga': const CardVisual(Icons.bolt_rounded, SS.mana, FxShape.bolt,
+      'notis a full ⚡', 'ALERTA DE SERVIDOR',
+      'Notificaciones *sin parar* ⚡', 'SOBRECARGA'),
+  'dobleJugada': const CardVisual(Icons.casino_rounded, SS.mana,
+      FxShape.burst, 'doble o nada 🎲', 'MODO RIESGO ACTIVADO',
+      'Voy *con todo* esta vez 🎲', 'EN JUEGO'),
+  'respiro': const CardVisual(Icons.spa_rounded, _verde, FxShape.rise,
+      'se desconectó 🌙', 'ESTADO: AUSENTE',
+      'Me tomo *un segundo* 🌙', 'AUSENTE'),
+  'sincronia': const CardVisual(Icons.sync_rounded, SS.mana, FxShape.ring,
+      'sincronizado ✅', 'CUENTAS SINCRONIZADAS',
+      'Todo en la *misma frecuencia* ✅', 'SINCRO'),
 
-  'ojear': const CardVisual(
-      Icons.visibility_rounded, _verde, FxShape.sparkle, 'vio tu story 👀'),
+  'ojear': const CardVisual(Icons.visibility_rounded, _verde,
+      FxShape.sparkle, 'vio tu story 👀', 'ALGUIEN TE ESTÁ VIENDO',
+      'Alguien *miró tu perfil* 👀', 'VISTO'),
 
-  'negar': const CardVisual(
-      Icons.block_rounded, _violeta, FxShape.slash, 'te bloqueó 🚫'),
-  'congelar': const CardVisual(
-      Icons.ac_unit_rounded, _hielo, FxShape.snow, 'congelado ❄️'),
-  'desmentir': const CardVisual(
-      Icons.gavel_rounded, _violeta, FxShape.burst, 'nota de comunidad 🔨'),
+  'negar': const CardVisual(Icons.block_rounded, _violeta, FxShape.slash,
+      'te bloqueó 🚫', 'PUBLICACIÓN BLOQUEADA',
+      'Eso *no va a pasar* 🚫', 'BLOQUEADO'),
+  'congelar': const CardVisual(Icons.ac_unit_rounded, _hielo, FxShape.snow,
+      'congelado ❄️', 'CUENTA CONGELADA', 'Se quedó *sin señal* ❄️',
+      'CONGELADO'),
+  'desmentir': const CardVisual(Icons.gavel_rounded, _violeta, FxShape.burst,
+      'nota de comunidad 🔨', 'NOTA DE LA COMUNIDAD', '¡TENGO *6 Y 7*! 🏆',
+      'ANULADO'),
 };
 
 CardVisual visualFor(String cardId) =>
     kVisuals[cardId] ??
-    const CardVisual(Icons.style_rounded, SS.mute, FxShape.burst, 'nueva carta ✨');
+    const CardVisual(Icons.style_rounded, SS.mute, FxShape.burst,
+        'nueva carta ✨', 'CARTA NUEVA', 'Todavía *sin novedades* ✨',
+        'NUEVO');
+
+/// Parte un `post` (con la parte a resaltar entre asteriscos) en los
+/// TextSpan que necesita un Text.rich.
+List<InlineSpan> parsePost(String raw, TextStyle base, Color accent) {
+  final parts = raw.split('*');
+  return [
+    for (var i = 0; i < parts.length; i++)
+      TextSpan(
+        text: parts[i],
+        style: i.isOdd ? base.copyWith(color: accent) : base,
+      ),
+  ];
+}
 
 /// Dibuja el efecto de una carta. Recibe el avance de 0 a 1 y calcula dónde va
 /// cada partícula en ese instante; no guarda estado, así se puede repintar

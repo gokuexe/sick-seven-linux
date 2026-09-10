@@ -58,7 +58,10 @@ class SickSevenApp extends StatelessWidget {
 class _ResponsiveStage extends StatelessWidget {
   static const double _designMinW = 480;
   static const double _designMaxW = 620;
-  static const double _designH = 860;
+  // Con margen de sobra a propósito: GameScreen no tiene scroll de
+  // respaldo, así que si esto queda corto, lo que se corta son los
+  // botones de jugar — quedó así una vez y no puede volver a pasar.
+  static const double _designH = 960;
 
   final Widget child;
   const _ResponsiveStage({required this.child});

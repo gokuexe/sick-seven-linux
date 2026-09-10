@@ -237,8 +237,36 @@ class HandCard extends StatefulWidget {
   State<HandCard> createState() => _HandCardState();
 }
 
-const double _handCardW = 138;
-const double _handCardH = 216;
+const double _handCardW = 152;
+const double _handCardH = 300;
+
+const _paperBg = Color(0xFFF3EEFB);
+const _paperInk = Color(0xFF241A38);
+const _paperMute = Color(0xFF7C7195);
+
+/// La costura recortada entre el posteo (papel) y el cuerpo de la carta
+/// (oscuro), como el borde troquelado de una nota de prensa.
+class _SeamPainter extends CustomPainter {
+  final Color paper;
+  final Color body;
+  _SeamPainter({required this.paper, required this.body});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = paper);
+    final p = Paint()
+      ..color = body
+      ..strokeWidth = 3;
+    final skew = size.height * 1.6;
+    for (double x = -skew; x < size.width + skew; x += 11) {
+      canvas.drawLine(Offset(x, 0), Offset(x + skew, size.height), p);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SeamPainter old) =>
+      old.paper != paper || old.body != body;
+}
 
 class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
   late final AnimationController _idle;
@@ -310,7 +338,8 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _flipButton() {
+  /// El "···" del posteo. Gira la carta sin jugarla.
+  Widget _flipButton({bool dark = true}) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _toggleFlip,
@@ -320,62 +349,175 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.4),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+          color: dark
+              ? Colors.black.withValues(alpha: 0.3)
+              : Colors.black.withValues(alpha: 0.06),
         ),
-        child: const Icon(Icons.cached_rounded, size: 13, color: Colors.white),
+        child: Icon(
+          Icons.more_horiz_rounded,
+          size: 15,
+          color: dark ? Colors.white.withValues(alpha: 0.7) : _paperMute,
+        ),
       ),
     );
   }
 
-  Widget _costBadge(CardVisual v) {
-    if (widget.card.isReaction) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-        decoration: BoxDecoration(
-          color: SS.react,
-          borderRadius: BorderRadius.circular(999),
-          boxShadow: [
-            BoxShadow(color: SS.react.withValues(alpha: 0.5), blurRadius: 6),
-          ],
-        ),
-        child: const Text(
-          'REAC',
-          style: TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.4,
-            color: Colors.white,
-          ),
-        ),
-      );
+  String _familyTag(CardFamily f) {
+    switch (f) {
+      case CardFamily.motor:
+        return 'Motor';
+      case CardFamily.interaccion:
+        return 'Interacción';
+      case CardFamily.riesgo:
+        return 'Riesgo';
+      case CardFamily.reaccion:
+        return 'Reacción';
+      case CardFamily.info:
+        return 'Info';
     }
+  }
+
+  Widget _costPill(CardVisual v) {
+    final react = widget.card.isReaction;
+    final c = react ? SS.react : SS.mana;
     return Container(
-      width: 24,
-      height: 24,
-      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: SS.mana,
-        boxShadow: [
-          BoxShadow(color: SS.mana.withValues(alpha: 0.5), blurRadius: 6),
-        ],
+        color: c.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: c, width: 1.2),
       ),
       child: Text(
-        '${widget.card.cost}',
-        style: SS.numStyle.copyWith(fontSize: 13, color: const Color(0xFF2B1E00)),
+        react ? 'reacción' : '${widget.card.cost} maná',
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: c),
       ),
     );
   }
 
-  /// Una esquinita en diagonal, como el filo tallado de una carta de
-  /// colección: le da esa sensación de "ficha cargada" al panel de arte.
-  Widget _corner(Color c) => Transform.rotate(
-        angle: math.pi / 4,
-        child: Container(width: 5, height: 5, color: c.withValues(alpha: 0.7)),
-      );
+  /// La cinta que corona la ficha, tipo "nota de la comunidad".
+  Widget _ribbon(CardVisual v) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: v.color,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_rounded, size: 11, color: Colors.black.withValues(alpha: 0.7)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              v.ribbon,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                color: Color.lerp(v.color, Colors.black, 0.75),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// El posteo de ejemplo, con libertad propia: no repite el número exacto
+  /// de la jugada, solo ilustra el efecto en tono de red social.
+  Widget _paperPost(CardVisual v) {
+    final h = widget.card.id.hashCode.abs();
+    final likes = 8 + h % 90;
+    final comments = 1 + h % 14;
+    return Container(
+      color: _paperBg,
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: const Alignment(-0.3, -0.3),
+                    colors: [
+                      Color.lerp(v.color, Colors.white, 0.3)!,
+                      Color.lerp(v.color, Colors.black, 0.2)!,
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Vos',
+                        style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: _paperInk)),
+                    Text('ahora · público',
+                        style: TextStyle(fontSize: 9, color: _paperMute)),
+                  ],
+                ),
+              ),
+              _flipButton(dark: false),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text.rich(
+            TextSpan(
+              children: parsePost(
+                v.post,
+                const TextStyle(
+                  fontSize: 13.5,
+                  height: 1.2,
+                  fontWeight: FontWeight.w800,
+                  color: _paperInk,
+                ),
+                Color.lerp(v.color, Colors.black, 0.25)!,
+              ),
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 7),
+          Row(
+            children: [
+              Text('♡ $likes',
+                  style: const TextStyle(fontSize: 9.5, color: _paperMute)),
+              const SizedBox(width: 10),
+              Text('💬 $comments',
+                  style: const TextStyle(fontSize: 9.5, color: _paperMute)),
+              const Spacer(),
+              Text(
+                v.social,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  color: Color.lerp(v.color, Colors.black, 0.3),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _front(CardVisual v) {
+    final paperGrad = Color.lerp(SS.surfaceUp, v.color, 0.06)!;
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
       opacity: widget.enabled ? 1 : 0.4,
@@ -384,16 +526,9 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
         child: Container(
           width: _handCardW,
           height: _handCardH,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.lerp(SS.surfaceUp, v.color, 0.16)!,
-                Color.lerp(SS.surface, v.color, 0.04)!,
-              ],
-            ),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: v.color.withValues(alpha: widget.enabled ? 0.6 : 0.22),
               width: 1.6,
@@ -413,130 +548,125 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
                   ]
                 : null,
           ),
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // cabecera: solo ícono + nombre, sin competir por ancho
-                  // con las insignias (van superpuestas más abajo)
-                  Container(
-                    height: 27,
-                    padding: const EdgeInsets.fromLTRB(9, 0, 30, 0),
-                    alignment: Alignment.centerLeft,
-                    decoration: BoxDecoration(
-                      color: v.color.withValues(alpha: 0.22),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(14),
-                        topRight: Radius.circular(14),
-                      ),
+              _ribbon(v),
+              _paperPost(v),
+              SizedBox(
+                height: 8,
+                child: CustomPaint(
+                  painter: _SeamPainter(paper: _paperBg, body: paperGrad),
+                ),
+              ),
+              // el cuerpo: nombre, costo/familia, la regla real (sin
+              // ambigüedad) y el sello. Llena lo que quede de la ficha.
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [paperGrad, SS.surface],
                     ),
-                    child: Row(
-                      children: [
-                        Icon(v.icon, size: 14, color: v.color),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            widget.card.name,
-                            maxLines: 1,
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -10,
+                        bottom: -18,
+                        child: Icon(v.icon,
+                            size: 84, color: Colors.white.withValues(alpha: 0.05)),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(v.icon, size: 16, color: v.color),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  widget.card.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.3,
+                                    color: SS.ink,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              _costPill(v),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: v.color.withValues(alpha: 0.6)),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  _familyTag(widget.card.family),
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: v.color,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            widget.card.desc,
+                            maxLines: 4,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 11.5,
                               color: SS.ink,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Transform.rotate(
+                          angle: -0.14,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: v.color, width: 1.8),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              v.stamp,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: v.color,
+                              ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  // panel de arte: un ícono grande y tranquilo. El efecto de
-                  // partículas se guarda para cuando la carta cae en la
-                  // pila — congelado en la ficha se veía más ruido que dibujo
-                  Container(
-                    margin: const EdgeInsets.fromLTRB(7, 7, 7, 6),
-                    height: 60,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: RadialGradient(
-                        colors: [
-                          Color.lerp(SS.surfaceUp, v.color, 0.4)!,
-                          Color.lerp(SS.surface, v.color, 0.08)!,
-                        ],
                       ),
-                      border:
-                          Border.all(color: v.color.withValues(alpha: 0.5)),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Icon(v.icon, size: 32, color: v.color),
-                        Positioned(top: 3, left: 3, child: _corner(v.color)),
-                        Positioned(top: 3, right: 3, child: _corner(v.color)),
-                        Positioned(
-                            bottom: 3, left: 3, child: _corner(v.color)),
-                        Positioned(
-                            bottom: 3, right: 3, child: _corner(v.color)),
-                      ],
-                    ),
+                    ],
                   ),
-                  // la frase social: fondo oscuro y texto en el color de la
-                  // carta, no al revés — así se lee igual de bien sin
-                  // importar si esa carta es de un color claro o uno oscuro
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(7, 0, 7, 6),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.38),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                              color: v.color.withValues(alpha: 0.65)),
-                        ),
-                        child: Text(
-                          v.social,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: v.color,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // la descripción, sobre un panel oscuro propio: sin esto
-                  // el texto se leía apagado sobre el degradé de la carta
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.fromLTRB(7, 0, 7, 7),
-                      padding: const EdgeInsets.all(8),
-                      alignment: Alignment.topLeft,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.26),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        widget.card.desc,
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          color: SS.ink,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-              Positioned(top: 19, right: 7, child: _costBadge(v)),
-              Positioned(top: 4, right: 4, child: _flipButton()),
             ],
           ),
         ),
