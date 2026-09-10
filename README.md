@@ -14,7 +14,9 @@ Necesitás Flutter 3.27 o posterior (el código usa `Color.withValues`).
 ### Dependencias del sistema (Ubuntu/Debian)
 
 ```bash
-sudo apt-get install clang cmake ninja-build pkg-config libgtk-3-dev libblkid-dev liblzma-dev
+sudo apt-get install clang cmake ninja-build pkg-config \
+  libgtk-3-dev libblkid-dev liblzma-dev \
+  libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 ```
 
 ### Compilar y ejecutar
