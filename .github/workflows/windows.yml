@@ -1,0 +1,57 @@
+name: Compilar Windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Habilitar escritorio
+        run: flutter config --enable-windows-desktop
+
+      - name: Generar la carpeta de Windows
+        run: flutter create . --platforms=windows --project-name sick_seven
+
+      - name: Abrir con proporción de celular, no de escritorio
+        run: |
+          (Get-Content windows\runner\main.cpp) `
+            -replace 'Size size\(\d+,\s*\d+\)', 'Size size(520, 900)' |
+            Set-Content windows\runner\main.cpp
+        shell: pwsh
+
+      - name: Bajar dependencias
+        run: flutter pub get
+
+      - name: Compilar
+        run: flutter build windows --release
+
+      - name: Empaquetar en un zip
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath SickSeven-Windows.zip
+        shell: pwsh
+
+      - name: Guardar el zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: sick-seven-windows
+          path: SickSeven-Windows.zip
+
+      - name: Publicar para descarga directa
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows
+          name: Sick Seven - Windows
+          files: SickSeven-Windows.zip

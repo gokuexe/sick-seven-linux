@@ -1,0 +1,49 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Generar la carpeta de Android
+        run: flutter create . --platforms=android --project-name sick_seven
+
+      - name: Bajar dependencias
+        run: flutter pub get
+
+      - name: Compilar el APK
+        run: flutter build apk --release
+
+      - name: Guardar el APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sick-seven-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Publicar para descarga directa
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ultima
+          name: Sick Seven - última versión
+          files: build/app/outputs/flutter-apk/app-release.apk
