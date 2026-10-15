@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../engine.dart';
+import '../game_config.dart';
 import '../model.dart';
 import '../sfx.dart';
 import '../theme.dart';
@@ -11,7 +12,9 @@ import 'pieces.dart';
 import 'pile.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  final GameRules rules;
+
+  const GameScreen({super.key, this.rules = const GameRules()});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -19,7 +22,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen>
     with TickerProviderStateMixin {
-  final GameEngine engine = GameEngine();
+  late final GameEngine engine = GameEngine(rules: widget.rules);
 
   final List<PlayedEntry> _pile = [];
   int _seq = 0;
@@ -343,12 +346,13 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget _buttons(Player me, bool myTurn) {
-    final canSing = myTurn && me.isWin;
+    final canSing = myTurn && engine.canSing(0);
+    final bluffOnly = canSing && !me.isWin;
     return Row(
       children: [
         Expanded(
           child: _Btn(
-            label: 'Cantar Sick Seven',
+            label: bluffOnly ? 'Farolea Sick Seven' : 'Cantar Sick Seven',
             enabled: canSing,
             filled: true,
             onTap: () {

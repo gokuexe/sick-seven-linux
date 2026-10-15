@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import 'game_config.dart';
 import 'model.dart';
 
 enum FxKind { play, draw, mana, burn, block, sing, deny, win, lose, turn }
@@ -64,6 +65,7 @@ class _Move {
 
 class GameEngine extends ChangeNotifier {
   final Random _rng = Random();
+  final GameRules rules;
 
   late List<Player> players;
   late List<String> deck;
@@ -82,8 +84,23 @@ class GameEngine extends ChangeNotifier {
   void Function(Fx fx)? onFx;
   bool _dead = false;
 
-  GameEngine() {
+  GameEngine({this.rules = const GameRules()}) {
     newGame();
+  }
+
+  /// ¿Puede este jugador intentar cantar ahora?
+  bool canSing(int id) {
+    final p = players[id];
+    if (p.isWin) return true;
+    if (!rules.allowBluffSing) return false;
+    return p.distance <= rules.maxBluffDistance;
+  }
+
+  Iterable<Player> _othersFrom(int actorId) sync* {
+    final n = players.length;
+    for (var k = 1; k < n; k++) {
+      yield players[(actorId + k) % n];
+    }
   }
 
   @override
@@ -146,11 +163,14 @@ class GameEngine extends ChangeNotifier {
     turn = 0;
 
     for (final p in players) {
-      for (var i = 0; i < 3; i++) {
+      for (var i = 0; i < rules.initialHandSize; i++) {
         _drawCard(p, quiet: true);
       }
     }
-    _log('Empieza la partida. Buscá 6 y 7, uno en cada carta.', loud: true);
+    _log(
+      'Empieza la partida (${rules.label}). Buscá 6 y 7, uno en cada carta.',
+      loud: true,
+    );
     _startTurn(0);
   }
 
@@ -161,7 +181,7 @@ class GameEngine extends ChangeNotifier {
 
   void _drawCard(Player p, {bool quiet = false}) {
     if (deck.isEmpty) deck = _buildDeck();
-    if (p.hand.length >= 6) return;
+    if (p.hand.length >= rules.maxHandSize) return;
     p.hand.add(deck.removeLast());
     if (!quiet) _emit(const Fx(FxKind.draw));
   }
@@ -181,12 +201,21 @@ class GameEngine extends ChangeNotifier {
   void _checkBurn(Player p, CardColor c) {
     final v = p.value(c);
     if (v > 13 || v < 0) {
-      p.setValue(c, _drawValue());
-      final key = '${p.id}-${c.index}';
-      burnTokens[key] = (burnTokens[key] ?? 0) + 1;
-      _log('${p.name} se quemó la ${colorName(c)} y robó una nueva.',
-          loud: true);
-      _emit(Fx(FxKind.burn, playerId: p.id, color: c));
+      if (rules.softBurn) {
+        final clamped = v.clamp(0, 13);
+        p.setValue(c, clamped);
+        _log(
+          '${p.name} rozó el límite: ${colorName(c)} queda en $clamped.',
+          loud: true,
+        );
+      } else {
+        p.setValue(c, _drawValue());
+        final key = '${p.id}-${c.index}';
+        burnTokens[key] = (burnTokens[key] ?? 0) + 1;
+        _log('${p.name} se quemó la ${colorName(c)} y robó una nueva.',
+            loud: true);
+        _emit(Fx(FxKind.burn, playerId: p.id, color: c));
+      }
     }
   }
 
@@ -288,8 +317,8 @@ class GameEngine extends ChangeNotifier {
 
   Future<String?> _reactionWindow(int actorId, ReactKind kind,
       {String cardName = ''}) async {
-    for (final p in players) {
-      if (p.id == actorId || _dead) continue;
+    for (final p in _othersFrom(actorId)) {
+      if (_dead) continue;
       final opts = p.hand
           .toSet()
           .where((k) => kCards[k]!.react == kind && kCards[k]!.cost <= p.mana)
@@ -311,12 +340,20 @@ class GameEngine extends ChangeNotifier {
               ? 'Última chance de frenarlo.'
               : 'Podés cancelarla antes de que se resuelva.',
           options: list,
-          seconds: 8,
+          seconds: rules.reactionSeconds,
         );
         chosen = r as String?;
       } else {
-        if (kind == ReactKind.sing || _rng.nextDouble() < 0.35) {
-          chosen = opts.first;
+        final singer = players[actorId];
+        final blockChance = kind == ReactKind.sing
+            ? (rules.allowBluffSing && !singer.isWin ? 0.75 : 0.45)
+            : 0.35;
+        if (_rng.nextDouble() < blockChance) {
+          if (kind == ReactKind.sing) {
+            chosen = opts.contains('desmentir') ? 'desmentir' : opts.first;
+          } else {
+            chosen = opts.first;
+          }
         }
       }
 
@@ -386,24 +423,39 @@ class GameEngine extends ChangeNotifier {
 
   Future<bool> sing(int id) async {
     final p = players[id];
-    if (!p.isWin || winner != null) return false;
+    if (winner != null || !canSing(id)) return false;
+    final genuine = p.isWin;
 
     busy = true;
-    _log('${p.name} canta ¡Sick Seven!', loud: true);
+    _log(
+      genuine
+          ? '${p.name} canta ¡Sick Seven!'
+          : '${p.name} canta ¡Sick Seven! (¿farol?)',
+      loud: true,
+    );
     _emit(Fx(FxKind.sing, playerId: id, actorName: p.name));
     _touch();
     await _wait(500);
 
     final stop = await _reactionWindow(id, ReactKind.sing);
     if (stop != null) {
-      _log('El canto de ${p.name} queda anulado. Suma 1 a su roja.', loud: true);
+      final penalty = genuine ? 1 : 2;
+      _log(
+        genuine
+            ? 'El canto de ${p.name} queda anulado. Suma $penalty a su roja.'
+            : 'Desmienten el farol de ${p.name}. Suma $penalty a su roja.',
+        loud: true,
+      );
       _emit(Fx(FxKind.deny, playerId: id));
-      _bump(p, CardColor.red, 1);
+      _bump(p, CardColor.red, penalty);
       busy = false;
       _touch();
       return false;
     }
 
+    if (!genuine) {
+      _log('Nadie desmintió: ${p.name} gana con el farol.', loud: true);
+    }
     winner = p.name;
     busy = false;
     _emit(Fx(p.human ? FxKind.win : FxKind.lose, playerId: id));
@@ -417,7 +469,7 @@ class GameEngine extends ChangeNotifier {
     if (_dead || winner != null) return;
     turn = i;
     final p = players[i];
-    p.mana = p.pending > 0 ? p.pending : 3;
+    p.mana = p.pending > 0 ? p.pending : rules.manaPerTurn;
     p.pending = 0;
     p.free = 0;
     p.overload = false;
@@ -456,8 +508,10 @@ class GameEngine extends ChangeNotifier {
     await _wait(750);
     for (var step = 0; step < 4; step++) {
       if (_dead || winner != null) return;
-      if (p.isWin) {
-        if (await sing(i)) return;
+      if (canSing(i)) {
+        if (p.isWin || (rules.allowBluffSing && _rng.nextDouble() < 0.2)) {
+          if (await sing(i)) return;
+        }
       }
       if (p.frozen || p.endNow) break;
       final mv = _bestMove(p);
@@ -466,7 +520,7 @@ class GameEngine extends ChangeNotifier {
       if (_dead || winner != null) return;
       await _wait(700);
     }
-    if (!_dead && winner == null && p.isWin) {
+    if (!_dead && winner == null && canSing(i) && p.isWin) {
       if (await sing(i)) return;
     }
     if (!_dead && winner == null) await endTurn();
@@ -524,9 +578,38 @@ class GameEngine extends ChangeNotifier {
     final q = Targets();
     if (card.needs.contains(Need.own)) q.own = _pickBestOwn(p);
     if (card.needs.contains(Need.color)) q.color = _randomColor();
-    q.foe = foes[_rng.nextInt(foes.length)].id;
-    if (card.needs.contains(Need.foeCard)) q.foeColor = _randomColor();
+    q.foe = _pickFoe(p);
+    if (card.needs.contains(Need.foeCard)) {
+      q.foeColor = _pickFoeColor(players[q.foe!], p);
+    }
     return q;
+  }
+
+  /// Prioriza al rival más lejos de ganar (más vulnerable).
+  int _pickFoe(Player p) {
+    final foes = foesOf(p.id);
+    foes.sort((a, b) => b.distance.compareTo(a.distance));
+    return foes.first.id;
+  }
+
+  CardColor _pickFoeColor(Player foe, Player self) {
+    if (!seesCard(foe.id, CardColor.red) && !seesCard(foe.id, CardColor.blue)) {
+      return _randomColor();
+    }
+    CardColor? best;
+    var bestDist = -1.0;
+    for (final c in CardColor.values) {
+      if (!seesCard(foe.id, c)) continue;
+      final v = foe.value(c);
+      final nr = c == CardColor.red ? v - 1 : foe.red;
+      final nb = c == CardColor.blue ? v - 1 : foe.blue;
+      final d = (nr - 6).abs() + (nb - 7).abs();
+      if (d > bestDist) {
+        bestDist = d.toDouble();
+        best = c;
+      }
+    }
+    return best ?? _randomColor();
   }
 
   /// Para cartas que también tocan una carta propia, el bot al menos elige la
@@ -556,7 +639,7 @@ class GameEngine extends ChangeNotifier {
   double _simulate(Player p, String key, Targets q) {
     final clone = Player(
         id: p.id, name: p.name, human: p.human, red: p.red, blue: p.blue);
-    final ctx = _SimCtx(clone, q);
+    final ctx = _SimCtx(clone, q, rules);
     try {
       kCards[key]!.effect?.call(ctx);
     } catch (_) {
@@ -608,9 +691,10 @@ class _Ctx implements EffectCtx {
 class _SimCtx implements EffectCtx {
   final Player clone;
   final Targets _q;
+  final GameRules rules;
   bool burned = false;
 
-  _SimCtx(this.clone, this._q);
+  _SimCtx(this.clone, this._q, this.rules);
 
   @override
   List<Player> get players => [clone];
@@ -620,8 +704,14 @@ class _SimCtx implements EffectCtx {
   Targets get q => _q;
 
   void _check(CardColor c) {
-    final v = clone.value(c);
-    if (v > 13 || v < 0) burned = true;
+    var v = clone.value(c);
+    if (v > 13 || v < 0) {
+      if (rules.softBurn) {
+        clone.setValue(c, v.clamp(0, 13));
+      } else {
+        burned = true;
+      }
+    }
   }
 
   @override

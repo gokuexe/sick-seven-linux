@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'game_config.dart';
 import 'sfx.dart';
 import 'theme.dart';
 import 'ui/game_screen.dart';
@@ -107,6 +108,8 @@ class TitleScreen extends StatefulWidget {
 
 class _TitleScreenState extends State<TitleScreen>
     with SingleTickerProviderStateMixin {
+  GameMode _mode = GameMode.classic;
+
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2400),
@@ -159,12 +162,59 @@ class _TitleScreenState extends State<TitleScreen>
                     textAlign: TextAlign.center,
                     style: SS.sub,
                   ),
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 28),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: GameMode.values.map((m) {
+                      final rules = GameRules(m);
+                      final selected = _mode == m;
+                      return GestureDetector(
+                        onTap: () {
+                          Sfx.i.tap();
+                          setState(() => _mode = m);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? SS.mana.withValues(alpha: 0.25)
+                                : SS.surface,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: selected ? SS.mana : SS.line,
+                              width: selected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Text(
+                            rules.label,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: selected ? SS.mana : SS.mute,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    GameRules(_mode).blurb,
+                    textAlign: TextAlign.center,
+                    style: SS.sub,
+                  ),
+                  const SizedBox(height: 22),
                   GestureDetector(
                     onTap: () {
                       Sfx.i.tap();
+                      final rules = GameRules(_mode);
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const GameScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => GameScreen(rules: rules),
+                        ),
                       );
                     },
                     child: Container(

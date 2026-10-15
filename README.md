@@ -69,9 +69,21 @@ flutter build appbundle --release    # Play Store
 flutter build windows --release      # Windows
 ```
 
+## Modos de juego
+
+Elegí el modo en la pantalla de título antes de jugar:
+
+| Modo | Qué cambia |
+|------|------------|
+| **Clásico** | Reglas estándar: 3 maná, canto solo con 6 y 7 reales, quemado = número nuevo al azar. |
+| **Rápido** | 2 maná por turno, mano inicial de 2 (máx. 5), reacciones de **5 s**, al pasar 0/13 la carta **se ajusta** al límite sin quemar. |
+| **Farol** | Podés cantar estando a **≤2 puntos** del 6/7 aunque no lo tengas: si nadie **Desmiente**, ganás; si te descubren, **+2** en roja. Canto real desmentido sigue siendo **+1** roja. |
+
+Las reacciones se preguntan **en orden horario** desde quien jugó o cantó.
+
 ## Cómo se juega
 
-- Al empezar tu turno recuperás **3 maná** y robás una carta de acción.
+- Al empezar tu turno recuperás **maná** (3 en clásico/farol, 2 en rápido) y robás una carta de acción.
 - Jugás las cartas que quieras mientras te alcance el maná.
 - **El maná que no gastás queda reservado** y sirve para interrumpir en el turno
   de los demás. Se pierde cuando arranca tu próximo turno.
@@ -134,6 +146,7 @@ ve las cartas ajenas.
 
 ## Lo que falta
 
+- **Cartas Rastreo / Niebla / Redirigir** y log estructurado para resolverlas.
 - **Multijugador online.** El motor ya está aislado para esto.
 - **Rastreo y Niebla**, las cartas que dependen de un historial más detallado
   que el registro actual.
