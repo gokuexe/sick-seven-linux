@@ -407,7 +407,8 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_rounded, size: 11, color: Colors.black.withValues(alpha: 0.7)),
+          Icon(Icons.warning_rounded,
+              size: 11, color: Colors.black.withValues(alpha: 0.7)),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -500,13 +501,18 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
               const SizedBox(width: 10),
               Text('💬 $comments',
                   style: const TextStyle(fontSize: 9.5, color: _paperMute)),
-              const Spacer(),
-              Text(
-                v.social,
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  color: Color.lerp(v.color, Colors.black, 0.3),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  v.social,
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color.lerp(v.color, Colors.black, 0.3),
+                  ),
                 ),
               ),
             ],
@@ -577,7 +583,8 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
                         right: -10,
                         bottom: -18,
                         child: Icon(v.icon,
-                            size: 84, color: Colors.white.withValues(alpha: 0.05)),
+                            size: 84,
+                            color: Colors.white.withValues(alpha: 0.05)),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -603,38 +610,45 @@ class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              _costPill(v),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: v.color.withValues(alpha: 0.6)),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  _familyTag(widget.card.family),
-                                  style: TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: v.color,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _costPill(v),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: v.color.withValues(alpha: 0.6)),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    _familyTag(widget.card.family),
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: v.color,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 10),
-                          Text(
-                            widget.card.desc,
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              color: SS.ink,
-                              height: 1.4,
+                          Flexible(
+                            child: Text(
+                              widget.card.desc,
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: SS.ink,
+                                height: 1.4,
+                              ),
                             ),
                           ),
                         ],

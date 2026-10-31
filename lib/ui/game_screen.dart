@@ -20,8 +20,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with TickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late final GameEngine engine = GameEngine(rules: widget.rules);
 
   final List<PlayedEntry> _pile = [];
@@ -133,37 +132,17 @@ class _GameScreenState extends State<GameScreen>
         child: SafeArea(
           child: Stack(
             children: [
-              Padding(
-                // el margen inferior queda generoso a propósito: en
-                // Windows maximizado no hay garantía de que el borde de la
-                // ventana sea clickeable hasta el último píxel
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 26),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _header(),
-                    const SizedBox(height: 10),
-                    _rivals(),
-                    const SizedBox(height: 10),
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(flex: 3, child: PlayedPile(entries: _pile)),
-                          const SizedBox(width: 8),
-                          Expanded(flex: 2, child: LogView(entries: engine.logs)),
-                        ],
-                      ),
+              LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  child: Center(
+                    child: SizedBox(
+                      width: constraints.maxWidth.clamp(0.0, 1000.0),
+                      height: constraints.maxHeight < 900
+                          ? 900
+                          : constraints.maxHeight,
+                      child: _table(me, myTurn),
                     ),
-                    const SizedBox(height: 10),
-                    _myCards(me),
-                    const SizedBox(height: 8),
-                    _status(me),
-                    const SizedBox(height: 8),
-                    _hand(me, myTurn),
-                    const SizedBox(height: 8),
-                    _buttons(me, myTurn),
-                  ],
+                  ),
                 ),
               ),
               SingFlash(anim: _singFlash, actor: _singActor),
@@ -186,6 +165,42 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  Widget _table(Player me, bool myTurn) {
+    return Padding(
+      // el margen inferior queda generoso a propósito: en
+      // Windows maximizado no hay garantía de que el borde de la
+      // ventana sea clickeable hasta el último píxel
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 26),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _header(),
+          const SizedBox(height: 10),
+          _rivals(),
+          const SizedBox(height: 10),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(flex: 3, child: PlayedPile(entries: _pile)),
+                const SizedBox(width: 8),
+                Expanded(flex: 2, child: LogView(entries: engine.logs)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          _myCards(me),
+          const SizedBox(height: 8),
+          _status(me),
+          const SizedBox(height: 8),
+          _hand(me, myTurn),
+          const SizedBox(height: 8),
+          _buttons(me, myTurn),
+        ],
+      ),
+    );
+  }
+
   Widget _header() {
     return Row(
       children: [
@@ -195,12 +210,30 @@ class _GameScreenState extends State<GameScreen>
             children: [
               const Text('SICK SEVEN', style: SS.title),
               const SizedBox(height: 2),
-              Text(
-                engine.winner != null
-                    ? 'Partida terminada'
-                    : 'Turno de ${engine.current.name}',
-                style: SS.sub,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 280),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.25),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                ),
+                child: Text(
+                  engine.winner != null
+                      ? 'Partida terminada'
+                      : 'Turno de ${engine.current.name}',
+                  key: ValueKey('${engine.turn}-${engine.winner}'),
+                  style: SS.sub.copyWith(
+                    color: engine.myTurn ? SS.win : SS.mute,
+                  ),
+                ),
               ),
+              const SizedBox(height: 2),
+              Text('Modo ${engine.rules.label}', style: SS.sub),
             ],
           ),
         ),
@@ -293,8 +326,10 @@ class _GameScreenState extends State<GameScreen>
           ? event.scrollDelta.dy
           : event.scrollDelta.dx;
       _handScroll.jumpTo(
-        (_handScroll.offset + delta)
-            .clamp(0.0, _handScroll.position.maxScrollExtent),
+        (_handScroll.offset + delta).clamp(
+          0.0,
+          _handScroll.position.maxScrollExtent,
+        ),
       );
     }
   }
@@ -325,7 +360,8 @@ class _GameScreenState extends State<GameScreen>
                     itemBuilder: (context, i) {
                       final card = kCards[me.hand[i]]!;
                       final cost = me.free > 0 ? 0 : card.cost;
-                      final enabled = myTurn &&
+                      final enabled =
+                          myTurn &&
                           !me.frozen &&
                           !card.isReaction &&
                           cost <= me.mana;
@@ -404,7 +440,12 @@ class _Btn extends StatelessWidget {
           borderRadius: BorderRadius.circular(11),
           border: Border.all(color: active ? SS.win : SS.line),
           boxShadow: active
-              ? [BoxShadow(color: SS.win.withValues(alpha: 0.4), blurRadius: 16)]
+              ? [
+                  BoxShadow(
+                    color: SS.win.withValues(alpha: 0.4),
+                    blurRadius: 16,
+                  ),
+                ]
               : null,
         ),
         child: Opacity(
@@ -429,9 +470,9 @@ class _Btn extends StatelessWidget {
 class _DragAnywhereScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.trackpad,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,
+  };
 }
