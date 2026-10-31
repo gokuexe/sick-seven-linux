@@ -20,8 +20,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with TickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late final GameEngine engine = GameEngine(rules: widget.rules);
 
   final List<PlayedEntry> _pile = [];
@@ -142,18 +141,6 @@ class _GameScreenState extends State<GameScreen>
                           ? 900
                           : constraints.maxHeight,
                       child: _table(me, myTurn),
-                    ),
-                    const SizedBox(height: 10),
-                    _myCards(me),
-                    const SizedBox(height: 8),
-                    _status(me),
-                    const SizedBox(height: 8),
-                    _hand(me, myTurn),
-                    const SizedBox(height: 8),
-                    _buttons(me, myTurn),
-                  ],
-                ),
-              ),
                     ),
                   ),
                 ),
@@ -339,8 +326,10 @@ class _GameScreenState extends State<GameScreen>
           ? event.scrollDelta.dy
           : event.scrollDelta.dx;
       _handScroll.jumpTo(
-        (_handScroll.offset + delta)
-            .clamp(0.0, _handScroll.position.maxScrollExtent),
+        (_handScroll.offset + delta).clamp(
+          0.0,
+          _handScroll.position.maxScrollExtent,
+        ),
       );
     }
   }
@@ -371,7 +360,8 @@ class _GameScreenState extends State<GameScreen>
                     itemBuilder: (context, i) {
                       final card = kCards[me.hand[i]]!;
                       final cost = me.free > 0 ? 0 : card.cost;
-                      final enabled = myTurn &&
+                      final enabled =
+                          myTurn &&
                           !me.frozen &&
                           !card.isReaction &&
                           cost <= me.mana;
@@ -450,7 +440,12 @@ class _Btn extends StatelessWidget {
           borderRadius: BorderRadius.circular(11),
           border: Border.all(color: active ? SS.win : SS.line),
           boxShadow: active
-              ? [BoxShadow(color: SS.win.withValues(alpha: 0.4), blurRadius: 16)]
+              ? [
+                  BoxShadow(
+                    color: SS.win.withValues(alpha: 0.4),
+                    blurRadius: 16,
+                  ),
+                ]
               : null,
         ),
         child: Opacity(
@@ -475,9 +470,9 @@ class _Btn extends StatelessWidget {
 class _DragAnywhereScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.trackpad,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,
+  };
 }
