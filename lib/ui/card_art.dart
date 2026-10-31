@@ -41,87 +41,152 @@ class CardVisual {
   /// El sello que cierra la ficha, a juego con el ribbon.
   final String stamp;
 
-  const CardVisual(this.icon, this.color, this.shape, this.social,
-      this.ribbon, this.post, this.stamp);
+  const CardVisual(this.icon, this.color, this.shape, this.social, this.ribbon,
+      this.post, this.stamp);
 }
 
-const _verde = Color(0xFF5FD39B);
-const _hielo = Color(0xFF8FD4FF);
+const _verde = Color(0xFFA6B58A);
+const _hielo = Color(0xFF8DB3AE);
 const _violeta = SS.react;
 
 /// Qué dibuja cada carta cuando cae sobre la pila.
 final Map<String, CardVisual> kVisuals = {
-  'mas1': const CardVisual(Icons.keyboard_arrow_up_rounded, _verde,
-      FxShape.rise, 'en alza 📈', 'TENDENCIA DEL TURNO',
-      '¡Subí *1 seguidor*! 📈', 'SUBIÓ'),
-  'mas2': const CardVisual(Icons.keyboard_double_arrow_up_rounded, _verde,
-      FxShape.rise, 'tendencia 📈', 'EN TENDENCIA',
-      '¡*Doble aumento* de views! 📈', 'TENDENCIA'),
-  'mas3': const CardVisual(Icons.expand_less_rounded, _verde, FxShape.rise,
-      'se viralizó 🚀', 'CONTENIDO VIRAL',
-      'Se me *llenó de comentarios* 🚀', 'VIRAL'),
+  'mas1': const CardVisual(
+      Icons.keyboard_arrow_up_rounded,
+      _verde,
+      FxShape.rise,
+      'Destello',
+      'RECUERDO I',
+      'Un detalle vuelve. *Uno solo*.',
+      '+1'),
+  'mas2': const CardVisual(
+      Icons.keyboard_double_arrow_up_rounded,
+      _verde,
+      FxShape.rise,
+      'Déjà vu',
+      'RECUERDO II',
+      'Esto ya pasó. *Dos veces*.',
+      '+2'),
+  'mas3': const CardVisual(
+      Icons.expand_less_rounded,
+      _verde,
+      FxShape.rise,
+      'La fotografía',
+      'RECUERDO III',
+      'Hay *tres sombras* detrás de vos.',
+      '+3'),
   'men1': const CardVisual(Icons.keyboard_arrow_down_rounded, SS.rojo,
-      FxShape.fall, 'en baja 📉', 'BAJÓ EL ENGAGEMENT',
-      'Perdí *1 seguidor* 📉', 'BAJÓ'),
-  'men2': const CardVisual(Icons.keyboard_double_arrow_down_rounded, SS.rojo,
-      FxShape.fall, 'se hunde 📉', 'CAYENDO EN PICADA',
-      'Se me *cayeron las visitas* 📉', 'CAYÓ'),
+      FxShape.fall, 'Laguna', 'AUSENCIA I', 'Olvidaste *un nombre*.', '−1'),
+  'men2': const CardVisual(
+      Icons.keyboard_double_arrow_down_rounded,
+      SS.rojo,
+      FxShape.fall,
+      'Punto ciego',
+      'AUSENCIA II',
+      'Dos minutos. *Ningún recuerdo*.',
+      '−2'),
   'men3': const CardVisual(Icons.expand_more_rounded, SS.rojo, FxShape.fall,
-      'cae en picada 💥', 'CRISIS DE IMAGEN',
-      '*Todos dejaron de seguirme* 💥', 'CRISIS'),
-
-  'transferencia': const CardVisual(Icons.east_rounded, SS.azul,
-      FxShape.drops, 'te transferí 💸', 'TRANSFERENCIA CONFIRMADA',
-      'Le mandé *unos puntitos* 💸', 'ENVIADO'),
-  'sanguijuela': const CardVisual(Icons.water_drop_rounded, SS.rojo,
-      FxShape.drops, 'te robó un like 🩸', 'ACTIVIDAD SOSPECHOSA',
-      'Me *clonaron el contenido* 🩸', 'DRENADO'),
-  'intercambio': const CardVisual(Icons.swap_horiz_rounded, SS.azul,
-      FxShape.swirl, 'cambio de cuenta 🔄', 'CAMBIO DE CUENTA',
-      '*Cambiamos de usuario* un rato 🔄', 'CAMBIADO'),
-  'volteo': const CardVisual(Icons.flip_camera_android_rounded, SS.azul,
-      FxShape.swirl, 'volteó el feed 🔀', 'ALGORITMO ALTERADO',
-      'Se me *invirtió el feed* 🔀', 'VOLTEADO'),
-  'espejo': const CardVisual(Icons.auto_awesome_rounded, _hielo,
-      FxShape.sweep, 'copió tu story 📋', 'CONTENIDO DUPLICADO',
-      '*Copiaron mi historia* 📋', 'COPIADO'),
-  'rebote': const CardVisual(Icons.u_turn_left_rounded, SS.azul, FxShape.ring,
-      'rebotó el mensaje ↩️', 'MENSAJE REENVIADO',
-      'Me *devolvieron el mensaje* ↩️', 'REBOTADO'),
-
-  'sobrecarga': const CardVisual(Icons.bolt_rounded, SS.mana, FxShape.bolt,
-      'notis a full ⚡', 'ALERTA DE SERVIDOR',
-      'Notificaciones *sin parar* ⚡', 'SOBRECARGA'),
-  'dobleJugada': const CardVisual(Icons.casino_rounded, SS.mana,
-      FxShape.burst, 'doble o nada 🎲', 'MODO RIESGO ACTIVADO',
-      'Voy *con todo* esta vez 🎲', 'EN JUEGO'),
-  'respiro': const CardVisual(Icons.spa_rounded, _verde, FxShape.rise,
-      'se desconectó 🌙', 'ESTADO: AUSENTE',
-      'Me tomo *un segundo* 🌙', 'AUSENTE'),
-  'sincronia': const CardVisual(Icons.sync_rounded, SS.mana, FxShape.ring,
-      'sincronizado ✅', 'CUENTAS SINCRONIZADAS',
-      'Todo en la *misma frecuencia* ✅', 'SINCRO'),
-
-  'ojear': const CardVisual(Icons.visibility_rounded, _verde,
-      FxShape.sparkle, 'vio tu story 👀', 'ALGUIEN TE ESTÁ VIENDO',
-      'Alguien *miró tu perfil* 👀', 'VISTO'),
-
+      'Amnesia', 'AUSENCIA III', 'Esa noche *no existió*.', '−3'),
+  'transferencia': const CardVisual(Icons.east_rounded, SS.azul, FxShape.drops,
+      'Culpa ajena', 'PROYECCIÓN', 'Ese recuerdo *nunca fue tuyo*.', 'CULPA'),
+  'sanguijuela': const CardVisual(
+      Icons.water_drop_rounded,
+      SS.rojo,
+      FxShape.drops,
+      'Voz ajena',
+      'INTRUSIÓN',
+      'Habla con tu voz. *No sos vos*.',
+      'ECO'),
+  'intercambio': const CardVisual(
+      Icons.swap_horiz_rounded,
+      SS.azul,
+      FxShape.swirl,
+      'Otra vida',
+      'DISOCIACIÓN',
+      'Recordás su infancia. *Él recuerda la tuya*.',
+      'CAMBIO'),
+  'volteo': const CardVisual(
+      Icons.flip_camera_android_rounded,
+      SS.azul,
+      FxShape.swirl,
+      'El reflejo',
+      'DISTORSIÓN',
+      'El espejo se movió *antes que vos*.',
+      'REFLEJO'),
+  'espejo': const CardVisual(
+      Icons.auto_awesome_rounded,
+      _hielo,
+      FxShape.sweep,
+      'Falso recuerdo',
+      'IMITACIÓN',
+      'Lo contaron tantas veces que *lo recordás*.',
+      'COPIA'),
+  'rebote': const CardVisual(
+      Icons.u_turn_left_rounded,
+      SS.azul,
+      FxShape.ring,
+      'La otra versión',
+      'CONTRADICCIÓN',
+      'Eso no fue lo que pasó. *¿O sí?*',
+      'INVERSO'),
+  'sobrecarga': const CardVisual(
+      Icons.bolt_rounded,
+      SS.mana,
+      FxShape.bolt,
+      'Insomnio',
+      'DETERIORO',
+      'Otra noche despierto. *Algo va a ceder*.',
+      'INSOMNIO'),
+  'dobleJugada': const CardVisual(
+      Icons.casino_rounded,
+      SS.mana,
+      FxShape.burst,
+      'Personalidad doble',
+      'FRACTURA',
+      'Por un momento, *alguien decide por vos*.',
+      'DOS VOCES'),
+  'respiro': const CardVisual(
+      Icons.spa_rounded,
+      _verde,
+      FxShape.rise,
+      'Cerrar los ojos',
+      'REFUGIO',
+      'Si no mirás, *quizá desaparezca*.',
+      'SILENCIO'),
+  'sincronia': const CardVisual(
+      Icons.sync_rounded,
+      SS.mana,
+      FxShape.ring,
+      'Obsesión',
+      'REPETICIÓN',
+      'El mismo pensamiento. *Una y otra vez*.',
+      'BUCLE'),
+  'ojear': const CardVisual(
+      Icons.visibility_rounded,
+      _verde,
+      FxShape.sparkle,
+      'La mirilla',
+      'OBSERVACIÓN',
+      'Al otro lado *también hay un ojo*.',
+      'TE VEO'),
   'negar': const CardVisual(Icons.block_rounded, _violeta, FxShape.slash,
-      'te bloqueó 🚫', 'PUBLICACIÓN BLOQUEADA',
-      'Eso *no va a pasar* 🚫', 'BLOQUEADO'),
-  'congelar': const CardVisual(Icons.ac_unit_rounded, _hielo, FxShape.snow,
-      'congelado ❄️', 'CUENTA CONGELADA', 'Se quedó *sin señal* ❄️',
-      'CONGELADO'),
+      'Negación', 'DEFENSA', 'Eso *no ocurrió*.', 'NEGADO'),
+  'congelar': const CardVisual(
+      Icons.ac_unit_rounded,
+      _hielo,
+      FxShape.snow,
+      'Parálisis',
+      'PESADILLA',
+      'Estás despierto. *No podés moverte*.',
+      'INMÓVIL'),
   'desmentir': const CardVisual(Icons.gavel_rounded, _violeta, FxShape.burst,
-      'nota de comunidad 🔨', 'NOTA DE LA COMUNIDAD', '¡TENGO *6 Y 7*! 🏆',
-      'ANULADO'),
+      'No te creo', 'SOSPECHA', 'Tu historia tiene *un agujero*.', 'MENTIRA'),
 };
 
 CardVisual visualFor(String cardId) =>
     kVisuals[cardId] ??
-    const CardVisual(Icons.style_rounded, SS.mute, FxShape.burst,
-        'nueva carta ✨', 'CARTA NUEVA', 'Todavía *sin novedades* ✨',
-        'NUEVO');
+    const CardVisual(Icons.style_rounded, SS.mute, FxShape.burst, 'Recuerdo',
+        'ARCHIVO PERDIDO', 'Algo *no encaja*.', 'NUEVO');
 
 /// Parte un `post` (con la parte a resaltar entre asteriscos) en los
 /// TextSpan que necesita un Text.rich.
@@ -164,13 +229,12 @@ class CardFxPainter extends CustomPainter {
           final local = ((t - delay) / (1 - delay)).clamp(0.0, 1.0);
           if (local <= 0) continue;
           final x = center.dx + (rnd.nextDouble() - 0.5) * size.width * 0.8;
-          final y = center.dy + dir * local * size.height * 0.55 -
+          final y = center.dy +
+              dir * local * size.height * 0.55 -
               dir * size.height * 0.1;
           p.color = v.color.withValues(alpha: _fade(local) * 0.85);
-          canvas.drawCircle(
-              Offset(x + math.sin(local * 5 + i) * 5, y),
-              (2.6 - local * 1.6).clamp(0.4, 3.0),
-              p);
+          canvas.drawCircle(Offset(x + math.sin(local * 5 + i) * 5, y),
+              (2.6 - local * 1.6).clamp(0.4, 3.0), p);
         }
         break;
 
@@ -270,7 +334,8 @@ class CardFxPainter extends CustomPainter {
           p.color = Colors.white.withValues(alpha: _fade(local) * 0.8);
           _star(
             canvas,
-            Offset(rnd.nextDouble() * size.width, rnd.nextDouble() * size.height),
+            Offset(
+                rnd.nextDouble() * size.width, rnd.nextDouble() * size.height),
             math.sin(local * math.pi) * 5,
             p,
           );

@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(const SickSevenApp());
     await tester.pump();
 
-    expect(find.text('SICK SEVEN'), findsOneWidget);
-    expect(find.text('Jugar contra 3 bots'), findsOneWidget);
+    expect(find.text('LA ÚLTIMA\nMANO'), findsOneWidget);
+    expect(find.text('SENTARSE A LA MESA'), findsOneWidget);
   });
 }

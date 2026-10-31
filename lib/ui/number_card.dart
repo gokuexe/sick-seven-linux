@@ -29,8 +29,7 @@ class NumberCard extends StatefulWidget {
   State<NumberCard> createState() => _NumberCardState();
 }
 
-class _NumberCardState extends State<NumberCard>
-    with TickerProviderStateMixin {
+class _NumberCardState extends State<NumberCard> with TickerProviderStateMixin {
   late final AnimationController _pulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 420),
@@ -91,9 +90,8 @@ class _NumberCardState extends State<NumberCard>
         animation: Listenable.merge([_pulse, _burn, _glow]),
         builder: (context, _) {
           final b = _burn.value;
-          final shake = b > 0 && b < 1
-              ? math.sin(b * math.pi * 9) * (1 - b) * 11
-              : 0.0;
+          final shake =
+              b > 0 && b < 1 ? math.sin(b * math.pi * 9) * (1 - b) * 11 : 0.0;
           final scale = 1 + 0.07 * math.sin(_pulse.value * math.pi);
 
           return Transform.translate(
@@ -104,29 +102,29 @@ class _NumberCardState extends State<NumberCard>
                 clipBehavior: Clip.none,
                 children: [
                   Container(
+                    width: double.infinity,
                     height: 104,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.zero,
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [up, base],
+                        colors: [SS.surfaceUp, SS.surface],
                       ),
                       border: Border.all(
                         color: widget.selectable
                             ? SS.mana
                             : widget.win
-                                ? SS.win.withValues(
-                                    alpha: 0.5 + 0.5 * _glow.value)
-                                : Colors.white.withValues(alpha: 0.10),
+                                ? SS.win
+                                    .withValues(alpha: 0.5 + 0.5 * _glow.value)
+                                : up,
                         width: widget.selectable || widget.win ? 2.5 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: (widget.win ? SS.win : base).withValues(
-                              alpha: widget.win
-                                  ? 0.25 + 0.3 * _glow.value
-                                  : 0.28),
+                              alpha:
+                                  widget.win ? 0.25 + 0.3 * _glow.value : 0.28),
                           blurRadius: widget.win ? 26 : 16,
                           spreadRadius: widget.win ? 2 : 0,
                           offset: const Offset(0, 6),
@@ -139,7 +137,7 @@ class _NumberCardState extends State<NumberCard>
                         // brillo diagonal fijo, da sensación de carta plastificada
                         Positioned.fill(
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.zero,
                             child: CustomPaint(painter: _SheenPainter()),
                           ),
                         ),
@@ -170,7 +168,7 @@ class _NumberCardState extends State<NumberCard>
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              widget.isRed ? 'tu roja' : 'tu azul',
+                              widget.isRed ? 'RECUERDO ROJO' : 'RECUERDO AZUL',
                               style: TextStyle(
                                 fontSize: 10.5,
                                 letterSpacing: 1.6,
@@ -183,7 +181,7 @@ class _NumberCardState extends State<NumberCard>
                         if (b > 0 && b < 0.4)
                           Positioned.fill(
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.zero,
                               child: Container(
                                 color: Colors.white
                                     .withValues(alpha: (0.4 - b) * 1.9),
@@ -241,8 +239,8 @@ class _EmberPainter extends CustomPainter {
       final delay = rnd.nextDouble() * 0.35;
       final local = ((t - delay) / (1 - delay)).clamp(0.0, 1.0);
       if (local <= 0) continue;
-      final y = size.height * (0.85 - local * 1.05) +
-          math.sin(local * 6 + i) * 6;
+      final y =
+          size.height * (0.85 - local * 1.05) + math.sin(local * 6 + i) * 6;
       final r = (3.2 - local * 2.4) * (0.6 + rnd.nextDouble() * 0.8);
       paint.color = Color.lerp(
         const Color(0xFFFFD37A),

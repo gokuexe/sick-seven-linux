@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import 'game_config.dart';
 import 'model.dart';
+import 'story.dart';
 
 enum FxKind { play, draw, mana, burn, block, sing, deny, win, lose, turn }
 
@@ -142,7 +143,7 @@ class GameEngine extends ChangeNotifier {
   }
 
   void newGame() {
-    const names = ['Vos', 'Ana', 'Bruno', 'Celia'];
+    const names = Story.opponents;
     players = List.generate(
       4,
       (i) => Player(
@@ -168,7 +169,7 @@ class GameEngine extends ChangeNotifier {
       }
     }
     _log(
-      'Empieza la partida (${rules.label}). Buscá 6 y 7, uno en cada carta.',
+      'Empieza la partida (${rules.label}). La puerta sigue cerrada. Buscá el 6 y el 7.',
       loud: true,
     );
     _startTurn(0);
@@ -284,9 +285,8 @@ class GameEngine extends ChangeNotifier {
         final r = await ask(
           title: '${card.name}: elegí un rival',
           desc: card.desc,
-          options: foesOf(actor.id)
-              .map((f) => ChoiceOption(f.name, f.id))
-              .toList(),
+          options:
+              foesOf(actor.id).map((f) => ChoiceOption(f.name, f.id)).toList(),
         );
         if (r == null) return null;
         q.foe = r as int;
@@ -329,12 +329,12 @@ class GameEngine extends ChangeNotifier {
       if (p.human) {
         final list = <ChoiceOption>[
           for (final k in opts)
-            ChoiceOption('${kCards[k]!.name} · ${kCards[k]!.cost} maná', k),
+            ChoiceOption('${kCards[k]!.name} · ${kCards[k]!.cost} lucidez', k),
           const ChoiceOption('Dejar pasar', null),
         ];
         final r = await ask(
           title: kind == ReactKind.sing
-              ? '${players[actorId].name} canta Sick Seven'
+              ? '${players[actorId].name} intenta recordar'
               : '${players[actorId].name} juega $cardName',
           desc: kind == ReactKind.sing
               ? 'Última chance de frenarlo.'
@@ -429,8 +429,8 @@ class GameEngine extends ChangeNotifier {
     busy = true;
     _log(
       genuine
-          ? '${p.name} canta ¡Sick Seven!'
-          : '${p.name} canta ¡Sick Seven! (¿farol?)',
+          ? '${p.name} canta ¡Lo recuerdo!'
+          : '${p.name} canta ¡Lo recuerdo! (¿farol?)',
       loud: true,
     );
     _emit(Fx(FxKind.sing, playerId: id, actorName: p.name));
@@ -499,7 +499,8 @@ class GameEngine extends ChangeNotifier {
     _startTurn((turn + 1) % players.length);
   }
 
-  Future<void> _wait(int ms) => Future<void>.delayed(Duration(milliseconds: ms));
+  Future<void> _wait(int ms) =>
+      Future<void>.delayed(Duration(milliseconds: ms));
 
   // ------------------------------------------------------------------ IA ----
 
@@ -570,8 +571,7 @@ class GameEngine extends ChangeNotifier {
     return chosen;
   }
 
-  CardColor _randomColor() =>
-      _rng.nextBool() ? CardColor.red : CardColor.blue;
+  CardColor _randomColor() => _rng.nextBool() ? CardColor.red : CardColor.blue;
 
   Targets _randomTargets(Player p, ActionCard card) {
     final foes = foesOf(p.id);

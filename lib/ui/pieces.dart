@@ -1,11 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../engine.dart';
 import '../model.dart';
 import '../theme.dart';
 import 'card_art.dart';
+import 'pixel_art.dart';
 
 /// Panel de un rival. Sus dos cartas están tapadas hasta que las mires con
 /// Ojear; el maná en cambio siempre es público, y es la mejor pista de si
@@ -31,7 +30,7 @@ class RivalPanel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(
         color: active ? SS.surfaceUp : SS.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         border: Border.all(
           color: active ? SS.mana : SS.line,
           width: active ? 1.6 : 1,
@@ -48,6 +47,8 @@ class RivalPanel extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          PixelPortrait(character: player.id - 1, active: active),
+          const SizedBox(height: 4),
           Text(
             player.name,
             style: TextStyle(
@@ -83,8 +84,8 @@ class RivalPanel extends StatelessWidget {
       height: 34,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: known ? SS.of(red) : const Color(0xFF2B4859),
-        borderRadius: BorderRadius.circular(6),
+        color: known ? SS.of(red) : const Color(0xFF302B32),
+        borderRadius: BorderRadius.zero,
         border: Border.all(
           color: known
               ? SS.upOf(red).withValues(alpha: 0.7)
@@ -95,7 +96,7 @@ class RivalPanel extends StatelessWidget {
         known ? '$value' : '?',
         style: SS.numStyle.copyWith(
           fontSize: 15,
-          color: known ? Colors.white : const Color(0xFF5F8299),
+          color: known ? Colors.white : const Color(0xFFA79B8D),
         ),
       ),
     );
@@ -131,8 +132,8 @@ class ManaPips extends StatelessWidget {
               width: size,
               height: size,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color.lerp(const Color(0xFF3A5A6C), SS.mana, t),
+                shape: BoxShape.rectangle,
+                color: Color.lerp(const Color(0xFF403940), SS.mana, t),
                 boxShadow: t > 0.5
                     ? [
                         BoxShadow(
@@ -189,7 +190,7 @@ class _LogViewState extends State<LogView> {
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: ListView.builder(
@@ -225,516 +226,136 @@ class HandCard extends StatefulWidget {
   final ActionCard card;
   final bool enabled;
   final VoidCallback onTap;
-
-  const HandCard({
-    super.key,
-    required this.card,
-    required this.enabled,
-    required this.onTap,
-  });
-
+  const HandCard(
+      {super.key,
+      required this.card,
+      required this.enabled,
+      required this.onTap});
   @override
   State<HandCard> createState() => _HandCardState();
 }
 
-const double _handCardW = 152;
-const double _handCardH = 300;
-
-const _paperBg = Color(0xFFF3EEFB);
-const _paperInk = Color(0xFF241A38);
-const _paperMute = Color(0xFF7C7195);
-
-/// La costura recortada entre el posteo (papel) y el cuerpo de la carta
-/// (oscuro), como el borde troquelado de una nota de prensa.
-class _SeamPainter extends CustomPainter {
-  final Color paper;
-  final Color body;
-  _SeamPainter({required this.paper, required this.body});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = paper);
-    final p = Paint()
-      ..color = body
-      ..strokeWidth = 3;
-    final skew = size.height * 1.6;
-    for (double x = -skew; x < size.width + skew; x += 11) {
-      canvas.drawLine(Offset(x, 0), Offset(x + skew, size.height), p);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SeamPainter old) =>
-      old.paper != paper || old.body != body;
-}
-
-class _HandCardState extends State<HandCard> with TickerProviderStateMixin {
-  late final AnimationController _idle;
-  late final AnimationController _flip;
-  bool _showBack = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final seed = widget.card.id.hashCode;
-    _idle = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 2200 + seed % 700),
-    )
-      ..value = (seed % 1000) / 1000
-      ..repeat(reverse: true);
-    _flip = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 420),
-    );
-  }
-
-  @override
-  void dispose() {
-    _idle.dispose();
-    _flip.dispose();
-    super.dispose();
-  }
-
-  void _toggleFlip() {
-    setState(() => _showBack = !_showBack);
-    _showBack ? _flip.forward() : _flip.reverse();
-  }
-
+class _HandCardState extends State<HandCard> {
+  bool _hover = false;
+  bool _back = false;
   @override
   Widget build(BuildContext context) {
     final v = visualFor(widget.card.id);
-    return AnimatedBuilder(
-      animation: _idle,
-      builder: (context, _) {
-        final t = Curves.easeInOut.transform(_idle.value);
-        return Transform.translate(
-          offset: Offset(0, -2 + t * 2.2),
-          child: Transform.rotate(
-            angle: (t - 0.5) * 0.022,
-            child: AnimatedBuilder(
-              animation: _flip,
-              builder: (context, __) {
-                final angle = Curves.easeInOut.transform(_flip.value) * math.pi;
-                final backHalf = angle > math.pi / 2;
-                return Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.0016)
-                    ..rotateY(angle),
-                  child: backHalf
-                      ? Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()..rotateY(math.pi),
-                          child: _back(v),
-                        )
-                      : _front(v),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// El "···" del posteo. Gira la carta sin jugarla.
-  Widget _flipButton({bool dark = true}) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _toggleFlip,
-      child: Container(
-        width: 20,
-        height: 20,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: dark
-              ? Colors.black.withValues(alpha: 0.3)
-              : Colors.black.withValues(alpha: 0.06),
-        ),
-        child: Icon(
-          Icons.more_horiz_rounded,
-          size: 15,
-          color: dark ? Colors.white.withValues(alpha: 0.7) : _paperMute,
-        ),
-      ),
-    );
-  }
-
-  String _familyTag(CardFamily f) {
-    switch (f) {
-      case CardFamily.motor:
-        return 'Motor';
-      case CardFamily.interaccion:
-        return 'Interacción';
-      case CardFamily.riesgo:
-        return 'Riesgo';
-      case CardFamily.reaccion:
-        return 'Reacción';
-      case CardFamily.info:
-        return 'Info';
-    }
-  }
-
-  Widget _costPill(CardVisual v) {
-    final react = widget.card.isReaction;
-    final c = react ? SS.react : SS.mana;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: c.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: c, width: 1.2),
-      ),
-      child: Text(
-        react ? 'reacción' : '${widget.card.cost} maná',
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: c),
-      ),
-    );
-  }
-
-  /// La cinta que corona la ficha, tipo "nota de la comunidad".
-  Widget _ribbon(CardVisual v) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: v.color,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.warning_rounded, size: 11, color: Colors.black.withValues(alpha: 0.7)),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              v.ribbon,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
-                color: Color.lerp(v.color, Colors.black, 0.75),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// El posteo de ejemplo, con libertad propia: no repite el número exacto
-  /// de la jugada, solo ilustra el efecto en tono de red social.
-  Widget _paperPost(CardVisual v) {
-    final h = widget.card.id.hashCode.abs();
-    final likes = 8 + h % 90;
-    final comments = 1 + h % 14;
-    return Container(
-      color: _paperBg,
-      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: const Alignment(-0.3, -0.3),
-                    colors: [
-                      Color.lerp(v.color, Colors.white, 0.3)!,
-                      Color.lerp(v.color, Colors.black, 0.2)!,
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Vos',
+    final accent = widget.enabled ? v.color : SS.mute;
+    return MouseRegion(
+      cursor:
+          widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        margin: EdgeInsets.only(top: _hover ? 0 : 6, bottom: _hover ? 6 : 0),
+        width: 152,
+        height: 300,
+        decoration: SS.panel(accent: accent, raised: _hover),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 4, 4),
+              child: Row(children: [
+                Expanded(
+                    child: Text(v.ribbon,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: _paperInk)),
-                    Text('ahora · público',
-                        style: TextStyle(fontSize: 9, color: _paperMute)),
-                  ],
-                ),
-              ),
-              _flipButton(dark: false),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text.rich(
-            TextSpan(
-              children: parsePost(
-                v.post,
-                const TextStyle(
-                  fontSize: 13.5,
-                  height: 1.2,
-                  fontWeight: FontWeight.w800,
-                  color: _paperInk,
-                ),
-                Color.lerp(v.color, Colors.black, 0.25)!,
-              ),
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 7),
-          Row(
-            children: [
-              Text('♡ $likes',
-                  style: const TextStyle(fontSize: 9.5, color: _paperMute)),
-              const SizedBox(width: 10),
-              Text('💬 $comments',
-                  style: const TextStyle(fontSize: 9.5, color: _paperMute)),
-              const Spacer(),
-              Text(
-                v.social,
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  color: Color.lerp(v.color, Colors.black, 0.3),
-                ),
-              ),
-            ],
-          ),
+                            fontSize: 9, color: accent, letterSpacing: 1))),
+                SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: IconButton(
+                        padding: EdgeInsets.zero,
+                        tooltip: _back ? 'Ver efecto' : 'Leer recuerdo',
+                        onPressed: () => setState(() => _back = !_back),
+                        icon: Icon(Icons.flip, size: 16, color: SS.mute))),
+              ])),
+          Expanded(
+              child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _back
+                ? () => setState(() => _back = false)
+                : widget.enabled
+                    ? widget.onTap
+                    : null,
+            child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 160),
+                child: _back ? _memory(v) : _face(v, accent)),
+          )),
+        ]),
+      ),
+    );
+  }
+
+  Widget _face(CardVisual v, Color accent) => Column(
+        key: const ValueKey('face'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+              height: 83,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                  color: SS.table, border: Border.all(color: SS.line)),
+              child:
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text('┌', style: TextStyle(color: accent)),
+                PixelSigil(
+                    seed: widget.card.id.codeUnits.fold(0, (a, b) => a + b),
+                    color: accent,
+                    size: 68),
+                Text('┘', style: TextStyle(color: accent)),
+              ])),
+          Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+              child: Text(widget.card.name.toUpperCase(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 15, height: 1.05, color: SS.ink))),
+          Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                  '${widget.card.cost} LUCIDEZ${widget.card.isReaction ? ' · RESPUESTA' : ''}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10, color: SS.mana))),
+          const SizedBox(height: 6),
+          Expanded(
+              child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(widget.card.desc,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 12, height: 1.15, color: SS.ink)))),
+          Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              color: SS.table,
+              child: Text(
+                  widget.enabled ? '▶ JUGAR RECUERDO' : 'ESPERÁ TU MOMENTO',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 9, color: widget.enabled ? SS.win : SS.mute))),
         ],
-      ),
-    );
-  }
+      );
 
-  Widget _front(CardVisual v) {
-    final paperGrad = Color.lerp(SS.surfaceUp, v.color, 0.06)!;
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 200),
-      opacity: widget.enabled ? 1 : 0.4,
-      child: GestureDetector(
-        onTap: widget.enabled ? widget.onTap : null,
-        child: Container(
-          width: _handCardW,
-          height: _handCardH,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: v.color.withValues(alpha: widget.enabled ? 0.6 : 0.22),
-              width: 1.6,
-            ),
-            boxShadow: widget.enabled
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                    BoxShadow(
-                      color: v.color.withValues(alpha: 0.28),
-                      blurRadius: 14,
-                      spreadRadius: -3,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _ribbon(v),
-              _paperPost(v),
-              SizedBox(
-                height: 8,
-                child: CustomPaint(
-                  painter: _SeamPainter(paper: _paperBg, body: paperGrad),
-                ),
-              ),
-              // el cuerpo: nombre, costo/familia, la regla real (sin
-              // ambigüedad) y el sello. Llena lo que quede de la ficha.
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [paperGrad, SS.surface],
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        right: -10,
-                        bottom: -18,
-                        child: Icon(v.icon,
-                            size: 84, color: Colors.white.withValues(alpha: 0.05)),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(v.icon, size: 16, color: v.color),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  widget.card.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.3,
-                                    color: SS.ink,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              _costPill(v),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: v.color.withValues(alpha: 0.6)),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  _familyTag(widget.card.family),
-                                  style: TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: v.color,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            widget.card.desc,
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              color: SS.ink,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Transform.rotate(
-                          angle: -0.14,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: v.color, width: 1.8),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              v.stamp,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.8,
-                                color: v.color,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// El dorso: el ícono grande de la carta, como un sello. Tocarlo la vuelve
-  /// a poner del lado jugable.
-  Widget _back(CardVisual v) {
-    return GestureDetector(
-      onTap: _toggleFlip,
-      child: Container(
-        width: _handCardW,
-        height: _handCardH,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.lerp(SS.surfaceUp, v.color, 0.32)!,
-              Color.lerp(SS.surface, v.color, 0.10)!,
-            ],
-          ),
-          border: Border.all(color: v.color.withValues(alpha: 0.6), width: 1.6),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(v.icon, size: 58, color: v.color),
-            const SizedBox(height: 14),
-            Text(
-              widget.card.name.toUpperCase(),
+  Widget _memory(CardVisual v) => Padding(
+        key: const ValueKey('memory'),
+        padding: const EdgeInsets.all(12),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          PixelSigil(seed: widget.card.id.length, color: v.color, size: 54),
+          const SizedBox(height: 16),
+          Text(v.post.replaceAll('*', ''),
               textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.6,
-                color: SS.ink,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              v.social,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                color: v.color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              style: const TextStyle(fontSize: 15, height: 1.3, color: SS.ink)),
+          const SizedBox(height: 16),
+          Text(v.stamp, style: TextStyle(fontSize: 10, color: v.color)),
+          const SizedBox(height: 12),
+          const Text('Tocá para volver', style: SS.sub),
+        ]),
+      );
 }

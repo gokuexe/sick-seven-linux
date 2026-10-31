@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import 'card_art.dart';
+import 'pixel_art.dart';
 
 /// Una carta que ya se jugó y quedó sobre la mesa.
 class PlayedEntry {
@@ -54,7 +55,7 @@ class MiniCard extends StatelessWidget {
       width: 64,
       height: 86,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.zero,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -86,7 +87,10 @@ class MiniCard extends StatelessWidget {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon(v), size: 30, color: v.color),
+              PixelSigil(
+                  seed: cardId.codeUnits.fold(0, (a, b) => a + b),
+                  size: 32,
+                  color: v.color),
               const SizedBox(height: 5),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -124,10 +128,8 @@ class _BlockedPainter extends CustomPainter {
       ..color = SS.rojo.withValues(alpha: 0.85)
       ..strokeWidth = 3.5
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-        Offset(size.width * 0.16, size.height * 0.2),
-        Offset(size.width * 0.84, size.height * 0.8),
-        p);
+    canvas.drawLine(Offset(size.width * 0.16, size.height * 0.2),
+        Offset(size.width * 0.84, size.height * 0.8), p);
     canvas.drawRect(
       Offset.zero & size,
       Paint()..color = Colors.black.withValues(alpha: 0.35),
@@ -175,22 +177,21 @@ class _PlayedPileState extends State<PlayedPile>
   @override
   Widget build(BuildContext context) {
     final entries = widget.entries;
-    final visible = entries.length > 7
-        ? entries.sublist(entries.length - 7)
-        : entries;
+    final visible =
+        entries.length > 7 ? entries.sublist(entries.length - 7) : entries;
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.zero,
         gradient: const RadialGradient(
           center: Alignment.center,
           radius: 0.95,
-          colors: [Color(0xFF1B3243), Color(0xFF101E29)],
+          colors: [SS.surfaceUp, SS.table],
         ),
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.zero,
         child: AnimatedBuilder(
           animation: _c,
           builder: (context, _) {
@@ -259,7 +260,6 @@ class _PlayedPileState extends State<PlayedPile>
                       ),
                     ),
                   ),
-
               ],
             );
           },
@@ -338,7 +338,7 @@ class DeckStack extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
                 border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               ),
               child: Text(
@@ -362,13 +362,14 @@ class _CardBack extends StatelessWidget {
       width: 62,
       height: 84,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.zero,
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [SS.tableUp, SS.table],
         ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.09), width: 1.3),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.09), width: 1.3),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withValues(alpha: 0.4),
@@ -407,11 +408,13 @@ class _Watermark extends StatelessWidget {
           children: [
             Text('6',
                 style: SS.numStyle.copyWith(
-                    fontSize: 96, color: Colors.white.withValues(alpha: 0.035))),
+                    fontSize: 96,
+                    color: Colors.white.withValues(alpha: 0.035))),
             const SizedBox(width: 18),
             Text('7',
                 style: SS.numStyle.copyWith(
-                    fontSize: 96, color: Colors.white.withValues(alpha: 0.035))),
+                    fontSize: 96,
+                    color: Colors.white.withValues(alpha: 0.035))),
           ],
         ),
       ),

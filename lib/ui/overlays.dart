@@ -89,7 +89,7 @@ class _ChoiceOverlayState extends State<ChoiceOverlay>
                 children: [
                   if (_timer != null) ...[
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.zero,
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 4,
@@ -144,9 +144,8 @@ class _OptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = option.tint == null
-        ? null
-        : SS.of(option.tint == CardColor.red);
+    final tint =
+        option.tint == null ? null : SS.of(option.tint == CardColor.red);
     return SizedBox(
       width: double.infinity,
       child: GestureDetector(
@@ -155,12 +154,13 @@ class _OptionButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
           decoration: BoxDecoration(
             color: SS.surface,
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.zero,
             border: Border(
               top: const BorderSide(color: SS.line),
               right: const BorderSide(color: SS.line),
               bottom: const BorderSide(color: SS.line),
-              left: BorderSide(color: tint ?? SS.line, width: tint == null ? 1 : 4),
+              left: BorderSide(
+                  color: tint ?? SS.line, width: tint == null ? 1 : 4),
             ),
           ),
           child: Text(
@@ -228,7 +228,7 @@ class _EndOverlayState extends State<EndOverlay>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    widget.youWon ? 'Ganaste' : '${widget.winner} gana',
+                    widget.youWon ? 'LA PUERTA SE ABRE' : 'TE QUEDÁS ACÁ',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
@@ -237,7 +237,12 @@ class _EndOverlayState extends State<EndOverlay>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text('6 y 7, uno en cada carta.', style: SS.sub),
+                  Text(
+                      widget.youWon
+                          ? 'Del otro lado, alguien vuelve a repartir.'
+                          : '${widget.winner} recordó primero. La habitación te reconoce.',
+                      textAlign: TextAlign.center,
+                      style: SS.sub),
                   const SizedBox(height: 26),
                   GestureDetector(
                     onTap: widget.onAgain,
@@ -246,10 +251,10 @@ class _EndOverlayState extends State<EndOverlay>
                           horizontal: 34, vertical: 14),
                       decoration: BoxDecoration(
                         color: SS.mana,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.zero,
                       ),
                       child: const Text(
-                        'Jugar otra',
+                        'Volver a despertar',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -272,7 +277,7 @@ class _ConfettiPainter extends CustomPainter {
   final double t;
   _ConfettiPainter(this.t);
 
-  static const _palette = [SS.rojo, SS.azul, SS.mana, SS.win];
+  static const _palette = [SS.mute, SS.mana, SS.ink];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -296,7 +301,7 @@ class _ConfettiPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(center: Offset.zero, width: w, height: h),
-          const Radius.circular(1.5),
+          Radius.zero,
         ),
         paint,
       );
@@ -307,7 +312,6 @@ class _ConfettiPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ConfettiPainter old) => old.t != t;
 }
-
 
 /// Destello de pantalla completa cuando alguien canta. Es el momento más
 /// importante de la partida, así que se toma un segundo entero.
@@ -336,20 +340,21 @@ class SingFlash extends StatelessWidget {
                 Opacity(
                   opacity: fade.clamp(0.0, 1.0),
                   child: Transform.scale(
-                    scale: 0.7 + Curves.easeOutBack.transform(
-                          (t / 0.35).clamp(0.0, 1.0),
-                        ) * 0.45,
+                    scale: 0.7 +
+                        Curves.easeOutBack.transform(
+                              (t / 0.35).clamp(0.0, 1.0),
+                            ) *
+                            0.45,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           actor,
-                          style: const TextStyle(
-                              fontSize: 13, color: SS.mute),
+                          style: const TextStyle(fontSize: 13, color: SS.mute),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '¡SICK SEVEN!',
+                          '¡LO RECUERDO!',
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.w900,

@@ -116,7 +116,7 @@ final Map<String, ActionCard> kCards = {
   // --- motor ---------------------------------------------------------------
   'mas1': ActionCard(
     id: 'mas1',
-    name: '+1',
+    name: 'Destello',
     desc: 'Sumá 1 a una carta tuya.',
     cost: 1,
     family: CardFamily.motor,
@@ -125,7 +125,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'men1': ActionCard(
     id: 'men1',
-    name: '−1',
+    name: 'Laguna',
     desc: 'Restá 1 a una carta tuya.',
     cost: 1,
     family: CardFamily.motor,
@@ -134,7 +134,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'mas2': ActionCard(
     id: 'mas2',
-    name: '+2',
+    name: 'Déjà vu',
     desc: 'Sumá 2 a una carta tuya.',
     cost: 2,
     family: CardFamily.motor,
@@ -143,7 +143,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'men2': ActionCard(
     id: 'men2',
-    name: '−2',
+    name: 'Punto ciego',
     desc: 'Restá 2 a una carta tuya.',
     cost: 2,
     family: CardFamily.motor,
@@ -152,7 +152,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'mas3': ActionCard(
     id: 'mas3',
-    name: '+3',
+    name: 'La fotografía',
     desc: 'Sumá 3 a una carta tuya.',
     cost: 3,
     family: CardFamily.motor,
@@ -161,7 +161,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'men3': ActionCard(
     id: 'men3',
-    name: '−3',
+    name: 'Amnesia',
     desc: 'Restá 3 a una carta tuya.',
     cost: 3,
     family: CardFamily.motor,
@@ -172,7 +172,7 @@ final Map<String, ActionCard> kCards = {
   // --- interacción ---------------------------------------------------------
   'transferencia': ActionCard(
     id: 'transferencia',
-    name: 'Transferencia',
+    name: 'Culpa ajena',
     desc: 'Restá 2 a una carta tuya y sumáselos a un rival.',
     cost: 2,
     family: CardFamily.interaccion,
@@ -184,7 +184,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'sanguijuela': ActionCard(
     id: 'sanguijuela',
-    name: 'Sanguijuela',
+    name: 'Voz ajena',
     desc: 'Restá 1 a un rival y sumáte 1.',
     cost: 2,
     family: CardFamily.interaccion,
@@ -196,7 +196,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'intercambio': ActionCard(
     id: 'intercambio',
-    name: 'Intercambio',
+    name: 'Otra vida',
     desc: 'Cambiá tu carta por la del mismo color de un rival.',
     cost: 3,
     family: CardFamily.interaccion,
@@ -211,7 +211,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'volteo': ActionCard(
     id: 'volteo',
-    name: 'Volteo',
+    name: 'El reflejo',
     desc: 'Intercambiá los valores de tus dos cartas.',
     cost: 1,
     family: CardFamily.interaccion,
@@ -223,7 +223,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'espejo': ActionCard(
     id: 'espejo',
-    name: 'Espejo',
+    name: 'Falso recuerdo',
     desc: 'Copiá el valor de la carta de un rival en la tuya del mismo color.',
     cost: 3,
     family: CardFamily.interaccion,
@@ -235,7 +235,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'rebote': ActionCard(
     id: 'rebote',
-    name: 'Rebote',
+    name: 'La otra versión',
     desc: 'Una carta rival pasa a valer 13 menos su valor.',
     cost: 3,
     family: CardFamily.interaccion,
@@ -246,11 +246,11 @@ final Map<String, ActionCard> kCards = {
     },
   ),
 
-  // --- riesgo y maná -------------------------------------------------------
+  // --- riesgo y lucidez -------------------------------------------------------
   'sobrecarga': ActionCard(
     id: 'sobrecarga',
-    name: 'Sobrecarga',
-    desc: 'Ganá 2 maná. Al cerrar el turno sumás 0–5 al azar a tu roja.',
+    name: 'Insomnio',
+    desc: 'Ganá 2 lucidez. Al cerrar el turno sumás 0–5 al azar a tu roja.',
     cost: 0,
     family: CardFamily.riesgo,
     effect: (c) {
@@ -260,7 +260,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'dobleJugada': ActionCard(
     id: 'dobleJugada',
-    name: 'Doble jugada',
+    name: 'Personalidad doble',
     desc: 'Tus próximas 2 cartas son gratis. Sumá 0–5 al azar a la elegida.',
     cost: 0,
     family: CardFamily.riesgo,
@@ -274,8 +274,8 @@ final Map<String, ActionCard> kCards = {
   ),
   'respiro': ActionCard(
     id: 'respiro',
-    name: 'Respiro',
-    desc: 'Terminás el turno ya. El próximo abrís con 5 maná.',
+    name: 'Cerrar los ojos',
+    desc: 'Terminás el turno ya. El próximo abrís con 5 lucidez.',
     cost: 0,
     family: CardFamily.riesgo,
     effect: (c) {
@@ -285,7 +285,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'sincronia': ActionCard(
     id: 'sincronia',
-    name: 'Sincronía',
+    name: 'Obsesión',
     desc: 'Tus dos cartas toman el valor de la que elijas.',
     cost: 2,
     family: CardFamily.riesgo,
@@ -300,7 +300,7 @@ final Map<String, ActionCard> kCards = {
   // --- información ---------------------------------------------------------
   'ojear': ActionCard(
     id: 'ojear',
-    name: 'Ojear',
+    name: 'La mirilla',
     desc: 'Mirás una carta de un rival.',
     cost: 1,
     family: CardFamily.info,
@@ -311,7 +311,7 @@ final Map<String, ActionCard> kCards = {
   // --- reacción ------------------------------------------------------------
   'negar': const ActionCard(
     id: 'negar',
-    name: 'Negar',
+    name: 'Negación',
     desc: 'Cancela una carta rival antes de que se resuelva.',
     cost: 2,
     family: CardFamily.reaccion,
@@ -319,7 +319,7 @@ final Map<String, ActionCard> kCards = {
   ),
   'congelar': const ActionCard(
     id: 'congelar',
-    name: 'Congelar',
+    name: 'Parálisis',
     desc: 'Cancela la carta y el rival no juega más este turno.',
     cost: 2,
     family: CardFamily.reaccion,
@@ -327,8 +327,8 @@ final Map<String, ActionCard> kCards = {
   ),
   'desmentir': const ActionCard(
     id: 'desmentir',
-    name: 'Desmentir',
-    desc: 'Anula un canto. El cantor suma 1 a su roja.',
+    name: 'No te creo',
+    desc: 'Impide escapar. Suma 1 a su roja; 2 si era un farol.',
     cost: 2,
     family: CardFamily.reaccion,
     react: ReactKind.sing,

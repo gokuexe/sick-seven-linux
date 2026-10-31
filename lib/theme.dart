@@ -1,65 +1,59 @@
-import 'dart:ui' show FontFeature;
-
 import 'package:flutter/material.dart';
 
-/// Paleta: mesa de fieltro azul-verdoso profundo, con el rojo y el azul de las
-/// cartas como únicos colores saturados. El ámbar queda reservado al maná, así
-/// que cuando ves ámbar en pantalla siempre significa "recurso".
+/// A limited palette: old paper, bruised shadows and amber lamplight.
 class SS {
-  static const table = Color(0xFF0F1A23);
-  static const tableUp = Color(0xFF1A3040);
-  static const surface = Color(0xFF1B2E3B);
-  static const surfaceUp = Color(0xFF24404F);
-  static const line = Color(0xFF31566A);
-
-  static const rojo = Color(0xFFE2404C);
-  static const rojoUp = Color(0xFFF06A73);
-  static const azul = Color(0xFF3F82E6);
-  static const azulUp = Color(0xFF6AA3F2);
-
-  static const mana = Color(0xFFEDB63F);
-  static const win = Color(0xFF4FD18B);
-  static const react = Color(0xFF8B77E0);
-
-  static const ink = Color(0xFFE8F0F5);
-  static const mute = Color(0xFF8FA9B8);
-
+  static const table = Color(0xFF101015);
+  static const tableUp = Color(0xFF242029);
+  static const surface = Color(0xFF211F26);
+  static const surfaceUp = Color(0xFF302B32);
+  static const line = Color(0xFF65584F);
+  static const rojo = Color(0xFFA04E54);
+  static const rojoUp = Color(0xFFD7837C);
+  static const azul = Color(0xFF527F83);
+  static const azulUp = Color(0xFF8DB3AE);
+  static const mana = Color(0xFFCEA86B);
+  static const win = Color(0xFFA6B58A);
+  static const react = Color(0xFF9C8BA9);
+  static const ink = Color(0xFFE3D7BF);
+  static const mute = Color(0xFFA79B8D);
   static Color of(bool red) => red ? rojo : azul;
   static Color upOf(bool red) => red ? rojoUp : azulUp;
-
   static const title = TextStyle(
-    fontSize: 17,
-    fontWeight: FontWeight.w800,
-    letterSpacing: 3.2,
-    color: ink,
-  );
-  static const sub = TextStyle(fontSize: 11.5, color: mute, height: 1.4);
-  static const body = TextStyle(fontSize: 12.5, color: ink, height: 1.45);
+      fontFamily: 'Pixelify',
+      fontSize: 22,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 2,
+      color: ink);
+  static const sub = TextStyle(fontSize: 12, color: mute, height: 1.4);
+  static const body = TextStyle(fontSize: 13, color: ink, height: 1.4);
   static const numStyle = TextStyle(
-    fontWeight: FontWeight.w800,
-    color: Colors.white,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-
+      fontFamily: 'Pixelify', fontWeight: FontWeight.w700, color: ink);
   static ThemeData theme() => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
         scaffoldBackgroundColor: table,
+        fontFamily: 'Pixelify',
         colorScheme: const ColorScheme.dark(
-          primary: mana,
-          secondary: azul,
-          surface: surface,
-        ),
-        fontFamily: null,
+            primary: mana, secondary: azul, surface: surface),
+        tooltipTheme: const TooltipThemeData(textStyle: body),
       );
-
-  /// Fondo de mesa: un halo cálido arriba que hace que las cartas resalten.
   static BoxDecoration tableBg() => const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0, -1.05),
-          radius: 1.25,
-          colors: [tableUp, table],
-          stops: [0.0, 0.7],
-        ),
+        image: DecorationImage(
+            image: AssetImage('assets/art/room.png'),
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.none,
+            opacity: 0.16),
+        gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [tableUp, table]),
+      );
+  static BoxDecoration panel({Color accent = line, bool raised = false}) =>
+      BoxDecoration(
+        color: raised ? surfaceUp : surface,
+        border: Border.all(color: accent, width: 2),
+        boxShadow: const [
+          BoxShadow(color: Color(0xFF09090C), offset: Offset(4, 4))
+        ],
       );
 }
